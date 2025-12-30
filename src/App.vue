@@ -2,8 +2,7 @@
 </script>
 
 <template>
-  <h1>hola</h1>
- 
+  <router-view />
 </template>
 
 <style scoped>

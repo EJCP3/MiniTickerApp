@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import Estadisticas from "./Estadisticas.vue";
 import Actividades from "./Actividades.vue";
+import LastTicker from "./LastTicker.vue";
 
 
 
@@ -12,7 +12,7 @@ import Actividades from "./Actividades.vue";
     <div>
       <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
       <p class="text-lg text-base-content/70">
-        Vista general del sistema de solicitudes
+        Vista general de mis solicitudes
       </p>
     </div>
 
@@ -21,9 +21,10 @@ import Actividades from "./Actividades.vue";
        <Estadisticas />
        <Actividades />
 
+      
          
     </div>
-   
+    <LastTicker/> 
   </main>
 </template>
 

@@ -40,7 +40,7 @@ const hotkeys = ref<NinjaAction[]>([
     id: "solicitudes",
     title: "Ver Solicitudes",
     hotkey: "ctrl+d",
-    icon: icons.receipt,
+    icon: icons.documentText,
     handler: () => {
       router.push("/solicitudes");
     },
@@ -60,7 +60,7 @@ const hotkeys = ref<NinjaAction[]>([
     id: "actividad",
     title: "Ver Actividad",
     hotkey: "ctrl+g",
-    icon: icons.timeline,
+    icon: icons.history,
     handler: () => {
       router.push("/actividad");
     },
@@ -69,7 +69,7 @@ const hotkeys = ref<NinjaAction[]>([
     id: "usuarios",
     title: "Gestionar Usuarios",
     hotkey: "ctrl+h",
-    icon: icons.users,
+    icon: icons.user,
     handler: () => {
       router.push("/usuarios");
     },

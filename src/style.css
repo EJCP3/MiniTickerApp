@@ -1,8 +1,10 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 @import "tailwindcss";
 @plugin "daisyui" {
   themes: winter --default, light, dark,  night;
 }
+
 
 :root {
   --font-zenkaku: 'Zen Kaku Gothic Antique', sans-serif;

@@ -1,13 +1,28 @@
 <script setup lang="ts">
-import MenuKeys from "../components/MenuKeys.vue";
-import { onMounted, ref } from "vue";
-import { icons } from "../utils/icons";
-import { on } from "events";
+import MenuKeys from "@/components/MenuKeys.vue";
+import {ref } from "vue";
+import { icons } from "@/utils/icons";
+import PerfilModal from "@/components/PerfilModal.vue";
 
+const perfilModalRef = ref();
+const currentUser = ref({
+  nombre: 'Ana',
+  email: 'Ana@miniticker.com',
+  rol: 'Solicitante',
+  fotoPerfilUrl: null, // Para probar el placeholder
+  fechaCreacion: '2024-12-25T10:00:00Z'
+});
+
+// Referencia al componente modal
+const profileModalRef = ref(null);
+
+const abrirPerfil = () => {
+  perfilModalRef.value?.openModal();
+};
 
 const ninjaKeysRef = ref();
 
-type Theme = "light" | "dark" | "winter";
+type Theme = "light" | "dark" | "winter" |  "night";
 
 const setTheme = (theme: Theme) => {
   document.documentElement.setAttribute("data-theme", theme);
@@ -25,26 +40,29 @@ interface MenuItem {
 }
 
 const menuItems = ref<MenuItem[]>([
-  { label: "Home", route: "/", hotkey: "h" },
-  { label: "Solicitudes", route: "/solicitudes", hotkey: "s" },
-  { label: "Usuarios", route: "/usuarios", hotkey: "u" },
-  { label: "Departamentos", route: "/departamentos", hotkey: "d" },
-  { label: "Actividad", route: "/actividad", hotkey: "a" },
+  { label: "Home", route: "/", hotkey: "a" },
+  { label: "Crear solicitud", route: "/crear-solicitud", hotkey: "s" },
+   { label: "Solicitudes", route: "/solicitudes", hotkey: "d" },
+  { label: "Departamentos", route: "/departamentos", hotkey: "f" },
+  { label: "Actividad", route: "/actividad", hotkey: "g" },
+    { label: "Usuarios", route: "/usuarios", hotkey: "h" },
 ]);
 </script>
 
 <template>
   <div>
-    <!-- Navbar -->
+    
     <header class="navbar bg-base-100 shadow-sm">
       <nav class="navbar-start">
         <div class="dropdown">
+      
           <div
             tabindex="0"
             role="button"
             class="btn btn-ghost btn-circle"
             aria-label="Menú de navegación"
           >
+          
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5"
@@ -60,10 +78,12 @@ const menuItems = ref<MenuItem[]>([
                 d="M4 6h16M4 12h16M4 18h7"
               />
             </svg>
+       
           </div>
+               
           <ul
             tabindex="-1"
-            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
           >
             <li v-for="item in menuItems" :key="item.route">
               <router-link :to="item.route">
@@ -111,7 +131,7 @@ const menuItems = ref<MenuItem[]>([
             class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
           >
             <li>
-              <button class="justify-between">
+              <button @click="abrirPerfil" class="justify-between">
                 Ana
                 <span class="badge opacity-50">Solicitantes</span>
               </button>
@@ -129,13 +149,15 @@ const menuItems = ref<MenuItem[]>([
               </button>
             </li>
             <li>
-              <button type="button">Logout</button>
+              <button type="button">Logout
+              </button>
             </li>
-            <li class="flex flex-row justify-center mt-10 gap-2">
-              <button @click="setTheme('winter')" type="button" class="badge">Winter</button>
-              <button @click="setTheme('light')" type="button" class="badge">Light</button>
-              <button @click="setTheme('dark')" type="button" class="badge">Dark</button>
-            </li>
+           <li class="grid grid-cols-2 gap-2 mt-10 w-fit mx-auto">
+    <button @click="setTheme('winter')" type="button" class="badge hover:bg-primary hover:text-primary-content">Winter</button>
+    <button @click="setTheme('light')" type="button" class="badge hover:bg-primary hover:text-primary-content">Light</button>
+    <button @click="setTheme('dark')" type="button" class="badge hover:bg-primary hover:text-primary-content">Dark</button>
+    <button @click="setTheme('night')" type="button" class="badge hover:bg-primary hover:text-primary-content">Night</button>
+</li>
           </ul>
         </div>
       </aside>
@@ -148,5 +170,6 @@ const menuItems = ref<MenuItem[]>([
 
     <!-- Ninja Keys -->
     <MenuKeys ref="ninjaKeysRef" />
+    <PerfilModal ref="perfilModalRef" :user="currentUser" />
   </div>
 </template>

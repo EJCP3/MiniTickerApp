@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import Estadísticas from "../components/Estadisticas.vue";
-import Actividades from "../components/Actividades.vue";
+import Estadisticas from "./Estadisticas.vue";
+import Actividades from "./Actividades.vue";
+
+
+
 </script>
 
 <template>
-  <main class="w-11/12 mx-auto py-6 h-full">
+  <main class="w-11/12 mx-auto py-6 h-full">  
     <div>
       <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
       <p class="text-lg text-base-content/70">
@@ -15,9 +18,10 @@ import Actividades from "../components/Actividades.vue";
 
     <div class="mt-6  h-full flex flex-col lg:flex-row gap-6">
     
-       
-         <Estadísticas />
-           <Actividades/>
+       <Estadisticas />
+       <Actividades />
+
+         
     </div>
    
   </main>

@@ -1,6 +1,13 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: winter --default, light, dark;
+  themes: winter --default, light, dark,  night;
+}
+
+:root {
+  --font-zenkaku: 'Zen Kaku Gothic Antique', sans-serif;
+    @apply bg-base-300;
+
 }
 
 .bg-login{
@@ -12,12 +19,6 @@
 
 }
 
-body {
-  
-  font-family: 'Zen Kaku Gothic Antique', sans-serif;
-}
-
 body{
-  @apply bg-base-300;
   @apply h-full;
 }

@@ -39,7 +39,7 @@ const formattedDate = computed(() => {
 // Avatar por defecto
 const avatarUrl = computed(() => {
   if (props.user?.fotoPerfilUrl) return props.user.fotoPerfilUrl;
-  return `https://ui-avatars.com/api/?name=${props.user.nombre}&background=random`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(props.user?.nombre)}&background=random`;
 });
 </script>
 

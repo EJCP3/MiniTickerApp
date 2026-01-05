@@ -118,13 +118,11 @@ export const icons = {
   filter: createSvgIcon(
     "M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
   ),
-  
+
   chat: createSvgIcon(
     "M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
   ),
-  trendingUp: createSvgIcon(
-    "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-  ),
+  trendingUp: createSvgIcon("M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"),
 
   // Para "Esta Semana" (Gráfico de barras)
   barChart: createSvgIcon(
@@ -136,21 +134,20 @@ export const icons = {
   ),
 
   // Icono de Lista simple (para "Tipos de Solicitud")
-  list: createSvgIcon(
-    "M4 6h16M4 10h16M4 14h16M4 18h16"
-  ),
-  
+  list: createSvgIcon("M4 6h16M4 10h16M4 14h16M4 18h16"),
+
   // Icono de Advertencia (para el mensaje amarillo)
   warning: createSvgIcon(
     "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
   ),
 
+  arrowUp: createSvgIcon("M5 10l7-7m0 0l7 7m-7-7v18"), // Flecha hacia arriba
 
+  arrowDown: createSvgIcon("M19 14l-7 7m0 0l-7-7m7 7V3"), // Flecha hacia abajo
 
+  sort: createSvgIcon("M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"), // Opción alternativa (filtro)
   // Check en Círculo (Para "Activos")
-  checkCircle: createSvgIcon(
-    "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-  ),
+  checkCircle: createSvgIcon("M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"),
 
   // Prohibido / Inactivo (Para "Inactivos")
   ban: createSvgIcon(
@@ -166,7 +163,7 @@ export const icons = {
   ),
 
   // Check en círculo (Resuelto)
- chartLine: createSvgIcon(
+  chartLine: createSvgIcon(
     "M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 17V3a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2z"
   ),
 
@@ -176,9 +173,7 @@ export const icons = {
   ),
 
   // Pausa (Para "Resuelta" según tu diseño original, aunque check suele ser mejor)
-  pause: createSvgIcon(
-    "M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-  ),
+  pause: createSvgIcon("M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"),
 
   // X en Círculo (Para "Rechazada")
   xCircle: createSvgIcon(
@@ -193,7 +188,6 @@ export const icons = {
   calendar: createSvgIcon(
     "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
   ),
-
 };
 
 export type IconName = keyof typeof icons;

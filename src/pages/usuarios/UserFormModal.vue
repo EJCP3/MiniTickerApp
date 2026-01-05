@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { areasOptions, DEFAULT_PHOTO, type User } from "@/types/users";
+import { areasOptions, type User } from "@/types/users";
 import BaseIcon from "@/components/BaseIcon.vue";
 
 // Props: 'userData' puede ser null (modo crear) o un objeto User (modo editar)

@@ -2,13 +2,10 @@
 import Estadisticas from "./Estadisticas.vue";
 import Actividades from "./Actividades.vue";
 import LastTicker from "./LastTicker.vue";
-
-
-
 </script>
 
 <template>
-  <main class="w-11/12 mx-auto py-6 h-full">  
+  <main class="max-w-8xl mx-auto py-6 h-full">
     <div>
       <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
       <p class="text-lg text-base-content/70">
@@ -16,15 +13,11 @@ import LastTicker from "./LastTicker.vue";
       </p>
     </div>
 
-    <div class="mt-6  h-full flex flex-col lg:flex-row gap-6">
-    
-       <Estadisticas />
-       <Actividades />
-
-      
-         
+    <div class="mt-6 w-full max-w-8xl h-full flex flex-col lg:flex-row gap-6">
+      <Estadisticas />
+      <Actividades />
     </div>
-    <LastTicker/> 
+    <LastTicker />
   </main>
 </template>
 

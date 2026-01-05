@@ -1,10 +1,11 @@
 <script setup lang="ts">
 
-import TicketModal, { type Ticket } from '@/components/TicketModal.vue' 
+import type { Ticket } from '@/types/modal'
 import ActividadKPIs from './ActividadKPIs.vue'
 import { type IconName } from '@/utils/icons' // Importamos el tipo si lo usas, opcional
 import BaseIcon from '@/components/BaseIcon.vue'
 import { ref, computed } from 'vue'
+import TicketModal from '@/components/modal/TicketModal.vue'
 
 // --- INTERFACES ---
 interface Activity {

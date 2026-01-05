@@ -1,0 +1,5 @@
+export * from './auth'
+export * from './department'
+export * from './solicitudes'
+export * from './users'
+export * from './ticket'

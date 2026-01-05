@@ -1,153 +1,46 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import TicketModal, { type Ticket } from '@/components/TicketModal.vue';
-import BaseIcon from '@/components/BaseIcon.vue'; // Importamos BaseIcon
-import type { IconName } from '@/utils/icons'; // Opcional, para tipado estricto
+import { storeToRefs } from 'pinia';
+import { useActivityStore } from '@/stores/activityStore';
+import { useActivityActions } from '@/composables/useDateTicket';
 
-// --- 1. Definición de Tipos ---
-interface TicketEventDto {
-  id: string;
-  ticketId: string;
-  ticketNumero: string;
-  ticketAsunto: string;
-  tipoEvento: 'Creado' | 'Asignado' | 'EstadoCambiado' | 'PrioridadCambiada' | 'Comentario' | 'Cierre';
-  texto: string;
-  usuarioNombre: string;
-  usuarioAvatar?: string;
-  fecha: string;
-  estadoNuevo?: string;
-}
+// Componentes Hijos
+import BaseIcon from '@/components/BaseIcon.vue';
+import TicketModal from '@/components/modal/TicketModal.vue';
+import ActivityItem from './ActividadesItem.vue';
+import ActivitySkeleton from './ActividadSkeleton.vue';
+import { computed } from 'vue';
+// 1. Datos del Store (Pinia Colada)
+const activityStore = useActivityStore();
+const { activities, isLoading } = storeToRefs(activityStore);
 
-// --- 2. Estado ---
-const showModal = ref(false);
-const ticketSeleccionado = ref<Ticket | null>(null);
-const loading = ref(true);
-const actividades = ref<TicketEventDto[]>([]);
+// 2. Lógica del Modal (Traída del composable)
+const { 
+  showModal, 
+  ticketSeleccionado, 
+  abrirDetalleTicket 
+} = useActivityActions();
 
-// --- 3. Simulación de Fetch ---
-const fetchActividades = async () => {
-  loading.value = true;
-  try {
-    await new Promise(resolve => setTimeout(resolve, 800));
 
-    actividades.value = [
-      {
-        id: 'e1',
-        ticketId: 't1',
-        ticketNumero: 'TEC-2025-042',
-        ticketAsunto: 'Fallo en servidor de correos',
-        tipoEvento: 'EstadoCambiado',
-        texto: 'Cambió el estado de "En Proceso" a "Resuelto"',
-        usuarioNombre: 'Juan Gestor',
-        fecha: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        estadoNuevo: 'Resuelto'
-      },
-      {
-        id: 'e2',
-        ticketId: 't2',
-        ticketNumero: 'MNT-2025-010',
-        ticketAsunto: 'Aire acondicionado R-2',
-        tipoEvento: 'Comentario',
-        texto: 'Se requiere comprar repuesto del compresor.',
-        usuarioNombre: 'Carlos Técnico',
-        fecha: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      },
-      {
-        id: 'e3',
-        ticketId: 't3',
-        ticketNumero: 'COM-2025-005',
-        ticketAsunto: 'Solicitud de Laptops',
-        tipoEvento: 'Asignado',
-        texto: 'Ticket asignado a María Compras',
-        usuarioNombre: 'Sistema',
-        fecha: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-      },
-      {
-        id: 'e4',
-        ticketId: 't4',
-        ticketNumero: 'TEC-2025-043',
-        ticketAsunto: 'Instalación VPN',
-        tipoEvento: 'Creado',
-        texto: 'Ticket creado por el usuario',
-        usuarioNombre: 'Ana Usuario',
-        fecha: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      }
-    ];
-  } catch (error) {
-    console.error("Error cargando actividades", error);
-  } finally {
-    loading.value = false;
-  }
-};
 
-onMounted(() => {
-  fetchActividades();
+
+// --- NUEVO: Filtramos solo las 6 más recientes ---
+const actividadesRecientes = computed(() => {
+  // 1. Obtenemos la lista segura (o array vacío)
+  const lista = activities.value || [];
+  
+  // 2. (Opcional) Aseguramos que estén ordenadas por fecha (la más nueva primero)
+  // Si tu backend ya las manda ordenadas, puedes borrar esta línea del sort
+  const listaOrdenada = [...lista].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+
+  // 3. Cortamos las primeras 6
+  return listaOrdenada.slice(0, 6);
 });
 
-// --- 4. Helpers Visuales ---
-const tiempoRelativo = (fechaIso: string) => {
-  const fecha = new Date(fechaIso);
-  const ahora = new Date();
-  const diffSegundos = Math.floor((ahora.getTime() - fecha.getTime()) / 1000);
 
-  if (diffSegundos < 60) return 'Hace un momento';
-  const minutos = Math.floor(diffSegundos / 60);
-  if (minutos < 60) return `Hace ${minutos} min`;
-  const horas = Math.floor(minutos / 60);
-  if (horas < 24) return `Hace ${horas} h`;
-  const dias = Math.floor(horas / 24);
-  return `Hace ${dias} d`;
-};
-
-// Configuración de iconos (Retorna el nombre del icono para BaseIcon)
-const getEventConfig = (tipo: string): { iconName: IconName, color: string, border: string } => {
-  switch (tipo) {
-    case 'Creado': 
-      return { iconName: 'plus', color: 'bg-emerald-500/20 text-emerald-500', border: 'border-emerald-500/30' };
-    case 'EstadoCambiado': 
-      return { iconName: 'refresh', color: 'bg-blue-500/20 text-blue-500', border: 'border-blue-500/30' };
-    case 'Asignado': 
-      return { iconName: 'userCheck', color: 'bg-purple-500/20 text-purple-500', border: 'border-purple-500/30' };
-    case 'Comentario': 
-      return { iconName: 'chat', color: 'bg-amber-500/20 text-amber-500', border: 'border-amber-500/30' };
-    case 'Resuelto': // O 'Cierre'
-      return { iconName: 'checkCircle', color: 'bg-green-500/20 text-green-500', border: 'border-green-500/30' };
-    default: 
-      return { iconName: 'bell', color: 'bg-gray-500/20 text-gray-400', border: 'border-gray-500/30' };
-  }
-};
-
-// --- 5. Lógica del Modal ---
-const abrirDetalle = (evento: TicketEventDto) => {
-  const codigo = evento.ticketNumero;
-  const categoria = codigo.startsWith('TEC') ? 'Tecnología' : (codigo.startsWith('MNT') ? 'Mantenimiento' : 'General');
-
-  ticketSeleccionado.value = {
-    id: parseInt(evento.id) || 0,
-    codigo: codigo,
-    categoria: categoria,
-    prioridad: 'Alta',
-    estado: evento.estadoNuevo || 'En Proceso',
-    titulo: evento.ticketAsunto,
-    descripcion: evento.texto,
-    solicitante: evento.usuarioNombre,
-    fechaCreacion: evento.fecha,
-    ultimaActualizacion: evento.fecha,
-    historial: [
-      {
-        titulo: evento.tipoEvento,
-        usuario: evento.usuarioNombre,
-        fecha: tiempoRelativo(evento.fecha),
-        descripcion: evento.texto
-      }
-    ]
-  };
-  showModal.value = true;
-};
 </script>
 
 <template>
-  <section class="w-full max-w-7xl h-full flex flex-col bg-base-100 rounded-3xl shadow-lg overflow-hidden border border-base-300">
+  <section class="w-full max-w-7xl h-full flex flex-col bg-base-100 rounded-3xl shadow-lg overflow-hidden border border-base-300 relative">
     
     <header class="p-6 border-b border-base-200 bg-base-100/50 backdrop-blur-md sticky top-0 z-20">
       <div class="flex items-center gap-4">
@@ -158,72 +51,30 @@ const abrirDetalle = (evento: TicketEventDto) => {
           <h2 class="text-xl font-bold text-base-content">Actividad Reciente</h2>
           <p class="text-sm text-base-content/60">Historial de movimientos</p>
         </div>
+        <button @click="activityStore.refresh()" class="ml-auto btn btn-ghost btn-circle btn-sm" title="Recargar">
+           <BaseIcon name="refresh" :class="{'animate-spin': isLoading}" class="size-5"/>
+        </button>
       </div>
     </header>
 
     <div class="flex-1 overflow-y-auto p-6 custom-scroll relative">
       
-      <div v-if="loading" class="space-y-6" aria-hidden="true">
-        <div v-for="i in 4" :key="i" class="flex gap-4 animate-pulse">
-          <div class="w-10 h-10 rounded-full bg-base-300"></div>
-          <div class="flex-1 space-y-2 py-1">
-            <div class="h-4 bg-base-300 rounded w-3/4"></div>
-            <div class="h-3 bg-base-300 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
+      <ActivitySkeleton v-if="isLoading && (!activities || activities.length === 0)" />
 
       <div v-else class="relative space-y-0">
         <div class="absolute left-5 top-2 bottom-6 w-0.5 bg-base-300/50" aria-hidden="true"></div>
 
         <ol class="list-none m-0 p-0">
-          <li 
-            v-for="(actividad, index) in actividades" 
-            :key="actividad.id"
-            class="group relative pl-12 pb-8 last:pb-0"
-          >
-            <div 
-              class="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-transform group-hover:scale-110 z-10 bg-base-100"
-              :class="[getEventConfig(actividad.tipoEvento).color, getEventConfig(actividad.tipoEvento).border]"
-            >
-              <BaseIcon :name="getEventConfig(actividad.tipoEvento).iconName" class="size-8" />
-            </div>
-
-            <article 
-              @click="abrirDetalle(actividad)"
-              role="button"
-              tabindex="0"
-              @keyup.enter="abrirDetalle(actividad)"
-              class="bg-base-200/40 hover:bg-base-200 rounded-xl p-4 transition-all border border-transparent hover:border-base-300 group-hover:shadow-sm cursor-pointer"
-            >
-              
-              <header class="flex justify-between items-start mb-1">
-                <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-base-300 text-base-content/70">
-                  {{ actividad.ticketNumero }}
-                </span>
-                <time :datetime="actividad.fecha" class="text-xs text-base-content/50 font-medium">
-                  {{ tiempoRelativo(actividad.fecha) }}
-                </time>
-              </header>
-
-              <h3 class="font-semibold text-sm text-base-content mb-1">
-                {{ actividad.ticketAsunto }}
-              </h3>
-              
-              <p class="text-sm text-base-content/70 leading-relaxed">
-                <span v-if="actividad.usuarioNombre !== 'Sistema'" class="font-medium text-primary">
-                  {{ actividad.usuarioNombre }}
-                </span>
-                <span v-else class="font-medium text-secondary">Sistema</span>:
-                {{ actividad.texto }}
-              </p>
-
-            </article>
-          </li>
+          <ActivityItem 
+            v-for="item in actividadesRecientes" 
+            :key="item.id" 
+            :actividad="item"
+            @click="abrirDetalleTicket(item)"
+          />
         </ol>
       </div>
-
-      <div v-if="!loading && actividades.length === 0" class="flex flex-col items-center justify-center h-40 text-base-content/50">
+      
+      <div v-if="!isLoading && activities?.length === 0" class="flex flex-col items-center justify-center h-40 text-base-content/50">
         <BaseIcon name="folderOpen" class="h-10 w-10 mb-2 opacity-50" />
         <p>No hay actividad reciente</p>
       </div>
@@ -240,17 +91,6 @@ const abrirDetalle = (evento: TicketEventDto) => {
 </template>
 
 <style scoped>
-.custom-scroll::-webkit-scrollbar {
-  width: 5px;
-}
-.custom-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
-  border-radius: 10px;
-}
-.custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.5);
-}
+.custom-scroll::-webkit-scrollbar { width: 5px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 10px; }
 </style>

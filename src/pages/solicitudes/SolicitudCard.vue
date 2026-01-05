@@ -49,8 +49,9 @@ const getStatusClass = (estado: string) => {
 
 <template>
   <article 
-    class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 border border-base-200 h-full border-l-[6px]"
+    class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 border border-base-200 h-full border-l-[6px] cursor-pointer hover:scale-[1.02]"
     :class="getPriorityBorder(solicitud.prioridad)"
+    @click="$emit('click')"
   >
     <div class="card-body p-6">
       

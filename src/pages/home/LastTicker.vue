@@ -1,114 +1,156 @@
 <script setup>
-import { ref } from 'vue';
-import CardTicker from '@/components/CardTicker.vue';
-import TicketModal from '@/components/TicketModal.vue';
-const isModalOpen = ref(false);
-const selectedTicket = ref(null);
+import { computed } from "vue";
+import { storeToRefs } from "pinia";
+import CardTicker from "@/components/CardTicker.vue";
+import TicketModal from "@/components/modal/TicketModal.vue"; // Ajusta la ruta a tu modal real
+import { useTicketStore } from "@/stores/ticketStore";
+import { useAuthStore } from "@/stores/authStore";
 
-// Datos simulados (Ampliados para llenar el modal correctamente)
-const tasks = ref([
-  {
-    id: 'MNT-2024-015',
-    type: 'Mantenimiento',
-    priority: 'Alta',
-    title: 'Reparación de aire acondicionado',
-    description: 'El aire acondicionado de la sala de reuniones principal hace un ruido fuerte y no enfría. Se requiere revisión urgente antes de la junta directiva.',
-    user: 'María García',
-    date: '14 dic 2024',
-    status: 'En Proceso',
-    responsible: 'Pedro Martínez',
-    // Datos extra para el modal:
-    fullDate: '2024-12-14T09:30:00',
-    updatedDate: '2024-12-15T14:00:00',
-    history: [
-      { titulo: 'Ticket Creado', usuario: 'María García', fecha: '2024-12-14T09:30:00', descripcion: 'Incidencia reportada desde panel.' },
-      { titulo: 'Asignación', usuario: 'Admin Sistema', fecha: '2024-12-14T10:00:00', descripcion: 'Asignado a Pedro Martínez.' },
-      { titulo: 'Inicio de revisión', usuario: 'Pedro Martínez', fecha: '2024-12-15T09:00:00', descripcion: 'Revisando unidad compresora.' }
-    ]
-  },
-  {
-    id: 'INC-2024-089',
-    type: 'Incidencia',
-    priority: 'Media',
-    title: 'Fallo en servidor de correo',
-    description: 'Los usuarios reportan lentitud al enviar emails externos con adjuntos pesados.',
-    user: 'Carlos López',
-    date: '15 dic 2024',
-    status: 'Pendiente',
-    responsible: 'Ana Torres',
-    fullDate: '2024-12-15T11:20:00',
-    updatedDate: '2024-12-15T11:20:00',
-    history: [
-       { titulo: 'Ticket Creado', usuario: 'Carlos López', fecha: '2024-12-15T11:20:00', descripcion: 'Problema de latencia detectado.' }
-    ]
-  },
-  {
-    id: 'SOL-2024-112',
-    type: 'Solicitud',
-    priority: 'Baja',
-    title: 'Nueva licencia de software',
-    description: 'El departamento de diseño solicita una licencia adicional de Adobe CC para el nuevo pasante.',
-    user: 'Laura Ruiz',
-    date: '16 dic 2024',
-    status: 'Aprobado',
-    responsible: 'Javier Gómez',
-    fullDate: '2024-12-16T15:45:00',
-    updatedDate: '2024-12-17T09:00:00',
-    history: [
-       { titulo: 'Solicitud enviada', usuario: 'Laura Ruiz', fecha: '2024-12-16T15:45:00', descripcion: 'Petición de compra.' },
-       { titulo: 'Aprobación Gerencia', usuario: 'Marta Boss', fecha: '2024-12-17T09:00:00', descripcion: 'Presupuesto aprobado.' }
-    ]
+// 1. IMPORTAMOS TU COMPOSABLE
+import { useActivityActions } from "@/composables/useDateTicket";
+
+// 2. CONECTAMOS LOS STORES
+const authStore = useAuthStore();
+const ticketStore = useTicketStore();
+const { tickets, isLoading } = storeToRefs(ticketStore);
+
+// 3. EXTRAEMOS LA LÓGICA DEL COMPOSABLE
+// Ya no necesitamos crear refs locales para el modal aquí, el composable lo maneja.
+const { showModal, ticketSeleccionado, abrirDetalleTicket } =
+  useActivityActions();
+
+// Helper visual (solo para la tarjeta pequeña)
+const closeModal = () => {
+  showModal.value = false;
+};
+const formatearFechaVisual = (fechaStr) => {
+  if (!fechaStr) return "---";
+
+  // CASO A: Viene de tu Backend C# actual ("03/01/2026 09:30 PM")
+  // Como ya es texto legible, NO usamos new Date(). Solo tomamos la primera parte.
+  if (typeof fechaStr === "string" && fechaStr.includes("/")) {
+    return fechaStr.split(" ")[0]; // Devuelve solo "03/01/2026"
   }
-]);
 
-// Función para abrir el modal
-const openTicketModal = (task) => {
-  // Mapeamos los datos de la Card al formato que espera el Modal (Ticket Interface)
-  selectedTicket.value = {
-    id: task.id,
-    codigo: task.id,
-    categoria: task.type,
-    prioridad: task.priority,
-    estado: task.status,
-    titulo: task.title,
-    descripcion: task.description,
-    solicitante: task.user,
-    responsable: task.responsible,
-    fechaCreacion: task.fullDate,
-    ultimaActualizacion: task.updatedDate,
-    historial: task.history || []
-  };
-  
-  isModalOpen.value = true;
+  // CASO B: Viene en formato ISO estándar ("2026-01-03T21:30:00Z")
+  const fechaObj = new Date(fechaStr);
+  if (!isNaN(fechaObj.getTime())) {
+    return fechaObj.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  // CASO C: Fallback
+  return fechaStr;
+};
+
+// 4. COMPUTADA OPTIMIZADA (Adaptada para el Composable)
+const ultimosTresTickets = computed(() => {
+  let listaProcesada = tickets.value || [];
+
+  // A. Filtro por Rol
+  const user = authStore.user;
+  if (user && (user.rol === "Solicitante" || user.role === "Solicitante")) {
+    listaProcesada = listaProcesada.filter((t) => {
+      const idTicketSolicitante = t.solicitante?.id || t.solicitanteId;
+      return String(idTicketSolicitante) === String(user.id);
+    });
+  }
+
+  // B. Ordenar
+  listaProcesada = [...listaProcesada].sort((a, b) => {
+    return (
+      new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime()
+    );
+  });
+
+  // C. Cortar y Mapear
+  return listaProcesada.slice(0, 3).map((ticket) => ({
+    // --- Props para CardTicker (Visual) ---
+    id: ticket.numero || ticket.codigo,
+    type: ticket.tipoSolicitud?.nombre || ticket.area?.nombre || "General",
+    priority: ticket.prioridad,
+    title: ticket.asunto,
+    description: ticket.descripcion,
+    user: ticket.solicitante?.nombre || "Usuario",
+    date: formatearFechaVisual(ticket.fechaCreacion),
+    status: ticket.estado,
+    responsible: ticket.gestor?.nombre || "Sin asignar",
+
+    // --- Props Híbridas para el Composable (ActivityItem) ---
+    // El composable espera: ticketId, titulo, mensaje, usuario, fecha
+    ticketId: ticket.id, // Vital para el fetch
+    titulo: ticket.asunto, // Para el título optimista
+    mensaje: ticket.descripcion, // El composable usa 'mensaje' como descripción
+    usuario: ticket.solicitante?.nombre || "Usuario",
+    fecha: ticket.fechaCreacion, // Fecha cruda para el parser del composable
+  }));
+});
+
+const clickEnTicket = (task) => {
+    console.log("Click en ticket:", task); // Para depurar si hace click
+    
+    // Construimos un objeto híbrido para que el Modal entienda el ID
+    // Forzamos que 'id' sea el GUID (ticketId) para que la lógica interna del modal/composable no falle
+    const objetoParaModal = {
+        ...task,
+        id: task.ticketId 
+    };
+    
+    abrirDetalleTicket(objetoParaModal);
 };
 </script>
 
 <template>
-  <div class="min-h-screen w-full flex flex-col items-center p-6 lg:pt-14 lg:pb-10 relative overflow-hidden ">
+  <div
+    class="min-h-screen w-full flex flex-col items-center p-6 lg:pt-14 lg:pb-10 relative overflow-hidden"
+  >
+    <div
+      class="absolute w-6 h-full left-1/2 -translate-x-1/2 top-0 bg-gray-700 rounded-full shadow-lg z-10 lg:relative lg:w-full lg:max-w-7xl lg:h-6 lg:left-auto lg:translate-x-0 lg:z-20 lg:bg-linear-to-r lg:from-gray-700 lg:to-gray-800 lg:rounded-full"
+    ></div>
 
-    <div class="absolute w-6 h-full left-1/2 -translate-x-1/2 top-0 bg-gray-700 rounded-full shadow-lg z-10
-                lg:relative lg:w-full lg:max-w-4xl lg:h-6 lg:left-auto lg:translate-x-0 lg:z-20 lg:bg-linear-to-r lg:from-gray-700 lg:to-gray-800 lg:rounded-full"></div>
+    <div
+      class="flex flex-col lg:flex-row justify-center items-start w-full gap-10 pt-12 lg:gap-24 lg:-mt-2.5 lg:px-8 lg:pt-0 pointer-events-none"
+    >
+      <div
+        v-if="isLoading && ultimosTresTickets.length === 0"
+        class="text-white font-bold p-4"
+      >
+        Cargando tickets...
+      </div>
 
-    <div class="flex flex-col lg:flex-row justify-center items-start w-full gap-10 pt-12 
-                lg:gap-12 lg:-mt-2.5 lg:px-8 lg:pt-0 pointer-events-none"> 
-                <div v-for="(task, index) in tasks" :key="task.id" class="flex flex-col items-center relative group w-full lg:w-auto pointer-events-auto">
+      <div
+        v-else
+        v-for="task in ultimosTresTickets"
+        :key="task.id"
+        class="flex flex-col items-center relative group w-full lg:w-auto pointer-events-auto"
+      >
+        <div
+          class="w-16 h-5 bg-gray-800 shadow-md relative z-0 rounded-md lg:w-6 lg:h-16 lg:top-1 lg:rounded-none"
+        ></div>
 
-        <div class="w-16 h-5 bg-gray-800 shadow-md relative z-0 rounded-md
-                    lg:w-6 lg:h-16 lg:top-1 lg:rounded-none"></div>
-
-        <div class="w-full max-w-sm transform-gpu transition-all duration-300 ease-out relative z-30 -mt-2
-                    lg:mt-0 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_rgba(0,0,0,0.15)]">
-          <CardTicker v-bind="task" @click="openTicketModal(task)" />
+        <div
+          class="w-full max-w-sm transform-gpu transition-all duration-300 ease-out relative z-30 -mt-2 lg:mt-0 lg:hover:-translate-y-2 lg:hover:shadow-[0_25px_50px_rgba(0,0,0,0.15)]"
+        >
+          <CardTicker v-bind="task" @click="clickEnTicket(task)" />
         </div>
+      </div>
 
+      <div
+        v-if="!isLoading && ultimosTresTickets.length === 0"
+        class="text-gray-400 p-4 font-medium pointer-events-auto"
+      >
+        No hay tickets recientes para mostrar.
       </div>
     </div>
 
-    <TicketModal 
-      :isOpen="isModalOpen" 
-      :ticket="selectedTicket"
-      @close="isModalOpen = false"
+ 
+   <TicketModal 
+      :isOpen="showModal" 
+      :ticket-id="ticketSeleccionado?.ticketId || ticketSeleccionado?.id" 
+      @close="closeModal" 
     />
-
   </div>
 </template>

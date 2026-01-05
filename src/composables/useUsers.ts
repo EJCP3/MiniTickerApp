@@ -1,24 +1,23 @@
 import { ref, computed } from 'vue'
-import type { User, RolUsuario } from '@/types/users'
-import { DEFAULT_PHOTO } from '@/types/users'
+import type { User, RolUsuario } from '@/types'
 
 // Estado global simulado
 const users = ref<User[]>([
   {
-    Id: '1', Nombre: 'Roberto Super', Email: 'roberto@empresa.com', Rol: 'SuperAdmin',
-    Activo: true, FechaCreacion: '2023-01-01', FotoPerfilUrl: ''
+    id: '1', nombre: 'Roberto Super', email: 'roberto@empresa.com', rol: 'SuperAdmin',
+    activo: true, fechaCreacion: '2023-01-01', fotoPerfilUrl: ''
   },
   {
-    Id: '2', Nombre: 'Carlos Admin', Email: 'admin@empresa.com', Rol: 'Admin',
-    Activo: true, FechaCreacion: '2023-06-15'
+    id: '2', nombre: 'Carlos Admin', email: 'admin@empresa.com', rol: 'Admin',
+    activo: true, fechaCreacion: '2023-06-15', fotoPerfilUrl: ''
   },
   {
-    Id: '3', Nombre: 'Pedro Gestor', Email: 'pedro.gestor@empresa.com', Rol: 'Gestor', AreaId: 'area-1',
-    Activo: true, FechaCreacion: '2024-02-10'
+    id: '3', nombre: 'Pedro Gestor', email: 'pedro.gestor@empresa.com', rol: 'Gestor', 
+    activo: true, fechaCreacion: '2024-02-10', fotoPerfilUrl: ''
   },
   {
-    Id: '4', Nombre: 'Ana Solicitante', Email: 'ana.user@empresa.com', Rol: 'Solicitante', AreaId: 'area-3',
-    Activo: true, FechaCreacion: '2024-03-05'
+    id: '4', nombre: 'Ana Solicitante', email: 'ana.user@empresa.com', rol: 'Solicitante', 
+    activo: true, fechaCreacion: '2024-03-05', fotoPerfilUrl: ''
   }
 ])
 
@@ -30,14 +29,14 @@ export function useUsers() {
   // Filtros
   const filteredUsers = computed(() => {
     return users.value.filter(user => {
-      const matchSearch = user.Nombre.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          user.Email.toLowerCase().includes(searchQuery.value.toLowerCase())
+      const matchSearch = user.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                          user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
       
-      const matchRole = filterRole.value === 'Todos' || user.Rol === filterRole.value
+      const matchRole = filterRole.value === 'Todos' || user.rol === filterRole.value
       
       const matchStatus = filterStatus.value === 'Todos' || 
-                          (filterStatus.value === 'Activos' && user.Activo) || 
-                          (filterStatus.value === 'Inactivos' && !user.Activo)
+                          (filterStatus.value === 'Activos' && user.activo) || 
+                          (filterStatus.value === 'Inactivos' && !user.activo)
       
       return matchSearch && matchRole && matchStatus
     })
@@ -46,45 +45,43 @@ export function useUsers() {
   // KPIs
   const stats = computed(() => ({
     total: users.value.length,
-    activos: users.value.filter(u => u.Activo).length,
-    inactivos: users.value.filter(u => !u.Activo).length,
-    superadmins: users.value.filter(u => u.Rol === 'SuperAdmin').length,
-    admins: users.value.filter(u => u.Rol === 'Admin').length,
-    gestores: users.value.filter(u => u.Rol === 'Gestor').length,
-    solicitantes: users.value.filter(u => u.Rol === 'Solicitante').length
+    activos: users.value.filter(u => u.activo).length,
+    inactivos: users.value.filter(u => !u.activo).length,
+    superadmins: users.value.filter(u => u.rol === 'SuperAdmin').length,
+    admins: users.value.filter(u => u.rol === 'Admin').length,
+    gestores: users.value.filter(u => u.rol === 'Gestor').length,
+    solicitantes: users.value.filter(u => u.rol === 'Solicitante').length
   }))
 
   // Acciones
   const createUser = (userData: any) => {
     users.value.push({
-      Id: Date.now().toString(),
-      Nombre: userData.Nombre,
-      Email: userData.Email,
-      Rol: userData.Rol as RolUsuario,
-      AreaId: userData.AreaId || undefined,
-      Activo: userData.Activo,
-      FechaCreacion: new Date().toISOString(),
-      FotoPerfilUrl: userData.Foto ? DEFAULT_PHOTO : ''
+      id: Date.now().toString(),
+      nombre: userData.nombre,
+      email: userData.email,
+      rol: userData.rol as RolUsuario,
+      activo: userData.activo,
+      fechaCreacion: new Date().toISOString(),
+      fotoPerfilUrl: userData.foto ? `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.nombre)}&background=random` : ''
     })
   }
 
   const updateUser = (userData: any) => {
-    const index = users.value.findIndex(u => u.Id === userData.Id)
+    const index = users.value.findIndex(u => u.id === userData.id)
     if (index !== -1) {
       users.value[index] = {
         ...users.value[index],
-        Nombre: userData.Nombre,
-        Email: userData.Email,
-        Rol: userData.Rol as RolUsuario,
-        AreaId: userData.AreaId || undefined,
-        Activo: userData.Activo,
-        FotoPerfilUrl: userData.Foto ? DEFAULT_PHOTO : users.value[index].FotoPerfilUrl
+        nombre: userData.nombre,
+        email: userData.email,
+        rol: userData.rol as RolUsuario,
+        activo: userData.activo,
+        fotoPerfilUrl: userData.foto ? `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.nombre)}&background=random` : users.value[index].fotoPerfilUrl
       }
     }
   }
 
   const deleteUser = (id: string) => {
-    users.value = users.value.filter(u => u.Id !== id)
+    users.value = users.value.filter(u => u.id !== id)
   }
 
   return {

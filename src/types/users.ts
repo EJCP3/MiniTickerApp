@@ -1,21 +1,32 @@
-export type RolUsuario = 'SuperAdmin' | 'Admin' | 'Gestor' | 'Solicitante'
-
 export interface User {
-  Id: string
-  Nombre: string
-  Email: string
-  Rol: RolUsuario
-  AreaId?: string 
-  Activo: boolean
-  FotoPerfilUrl?: string
-  FechaCreacion: string
+  id: string;
+  nombre: string;
+  email: string;
+  rol: string;
+  fotoPerfilUrl: string; 
+  activo: boolean;
+  fechaCreacion: string;
 }
 
-export const areasOptions = [
-  { label: 'Tecnología (TI)', value: 'area-1' },
-  { label: 'Recursos Humanos', value: 'area-2' },
-  { label: 'Ventas', value: 'area-3' },
-  { label: 'Marketing', value: 'area-4' },
-]
+export type RolUsuario = 'Solicitante' | 'Admin' | 'Gestor' | 'SuperAdmin';
 
-export const DEFAULT_PHOTO = "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+export const areasOptions = [
+  { label: 'Tecnología de la Información', value: 'area1' },
+  { label: 'Mantenimiento', value: 'area2' },
+  { label: 'Logística', value: 'area3' },
+  { label: 'Finanzas', value: 'area4' },
+  { label: 'Recursos Humanos', value: 'area5' },
+];
+
+
+// export interface User {
+//   Id: string
+//   Nombre: string
+//   Email: string
+//   Rol: RolUsuario
+//   AreaId?: string 
+//   Activo: boolean
+//   FotoPerfilUrl?: string
+//   FechaCreacion: string
+// }
+

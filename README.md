@@ -1,36 +1,54 @@
-## 💻 Frontend - APP Web
+# MiniTicker - Sistema de Solicitudes Internas
 
-La interfaz de usuario del sistema está desarrollada como una **Single Page Application (SPA)** moderna, diseñada para ser rápida, reactiva y fácil de usar. 
+Esta es la solución para el Sistema de Mesa de Servicios (MiniTicker). El proyecto consiste en una **Single Page Application (SPA)** moderna, diseñada para ser rápida y reactiva.
 
-El proyecto está construido sobre **Vue 3** (Composition API) y **TypeScript**, utilizando **Vite** como empaquetador para garantizar un rendimiento óptimo tanto en desarrollo como en producción.
+### Funcionalidades
 
-### 🛠 Stack Tecnológico
+Los usuarios del sistema pueden:
 
-El proyecto integra un ecosistema robusto de librerías para cubrir todas las necesidades de la aplicación:
+- Autenticarse según su rol (Solicitante, Gestor o Administrador) 
+- Crear solicitudes de servicio asignadas a diferentes áreas (TI, RRHH, etc.)
+- Ver un listado de tickets con filtros por Estado, Prioridad y Área.
+- Gestionar el ciclo de vida del ticket: cambiar estados y agregar comentarios.
+- Navegar rápidamente usando la Paleta de Comandos (Ninja Keys).
+- Exportar tablas de datos a Excel y reportes a PDF.
+- Recibir notificaciones en tiempo real (Toasts) sobre las acciones realizadas.
 
-#### Core
-* **Vue 3:** Framework progresivo de JavaScript.
-* **TypeScript:** Superset tipado para mayor robustez en el código.
-* **Vite:** Build tool de nueva generación (versión 6+).
-* **Vue Router:** Enrutamiento oficial para la navegación SPA.
+### Screenshot
 
-#### UI & Estilos
-* **Tailwind CSS 4:** Framework de estilos utility-first.
-* **DaisyUI 5:** Librería de componentes UI basada en Tailwind para agilizar el diseño.
-* **Vue Sonner:** Notificaciones tipo "toast" elegantes y ligeras.
-* **Ninja Keys:** Interfaz de paleta de comandos (Command Palette) para navegación rápida mediante teclado.
-* **Fontsource:** Gestión tipográfica (*Zen Kaku Gothic Antique*).
+![MiniTicker App](/image.png)
+![MiniTicker App](/Home.png)
+![MiniTicker App](/Crear.png)
+![MiniTicker App](/Form.png)
+![MiniTicker App](/Table.png)
+### Links
 
-#### Gestión de Estado y Datos
-* **Pinia:** Store oficial para manejo de estado global.
-* **Pinia Colada:** Capa de abstracción para Data Fetching asíncrono y caché inteligente.
-* **Axios:** Cliente HTTP para comunicación con la API.
+- **Live URL:** en proceso...
 
-#### Formularios y Utilidades
-* **FormKit:** Solución integral para construcción y validación de formularios.
-* **VueUse:** Colección de utilidades (composables) esenciales para Vue.
-* **JWT Decode:** Manejo de tokens de autenticación en el cliente.
+### Built with
 
-#### Reportes y Exportación
-* **XLSX (SheetJS):** Generación y exportación de reportes a Excel directamente desde el navegador.
-* **jsPDF:** Generación de documentos PDF en el cliente.
+El proyecto integra un ecosistema de librerías modernas:
+
+**Core & Build**
+- Vue 3 
+- TypeScript
+- Vite
+- Vue Router
+
+**UI & Estilos**
+- Tailwind CSS 4
+- DaisyUI 5
+- Vue Sonner (Notificaciones)
+- Ninja Keys (Command Palette)
+- Fontsource (Zen Kaku Gothic)
+
+**Data & State Management**
+- Pinia (Store Global)
+- Pinia Colada (Data Fetching & Cache)
+- Axios
+
+**Forms & Utils**
+- FormKit (Manejo de formularios)
+- VueUse (Composables)
+- JWT Decode (Auth)
+- XLSX & jsPDF (Reportes)

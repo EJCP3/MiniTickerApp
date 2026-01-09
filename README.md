@@ -17,10 +17,10 @@ Los usuarios del sistema pueden:
 ### Screenshot
 
 ![MiniTicker App](/image.png)
-![MiniTicker App](/Home.png)
-![MiniTicker App](/Crear.png)
-![MiniTicker App](/Form.png)
-![MiniTicker App](/Table.png)
+![Home](/Home.png)
+![Crear](/Crear.png)
+![Form](/Form.png)
+![Table](/Table.png)
 ### Links
 
 - **Live URL:** en proceso...

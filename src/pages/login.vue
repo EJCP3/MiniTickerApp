@@ -7,7 +7,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const credentials = ref({
-  email: "", // Asegúrate que tu backend espera 'username' o 'email'
+  email: "", 
   password: "",
 });
 
@@ -17,7 +17,6 @@ const handleLogin = async (data) => {
   const success = await authStore.login(credentials.value);
 
   if (success) {
-    // Redirigir al home o dashboard
     router.push("/");
   }
 };

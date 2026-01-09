@@ -1,13 +1,14 @@
+
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import BaseIcon from "../BaseIcon.vue";
-import { useTicketStore } from "@/stores/ticketModalStore"; // Ajusta ruta si es ticketModalStore
+import { useTicketStore } from "@/stores/ticketModalStore"; 
 import { useAuthStore } from "@/stores/authStore";
 
 const store = useTicketStore();
 const authStore = useAuthStore();
 
-// Estados Enum (Asegúrate que coincidan con tu Backend: 0=Nueva, 1=EnProceso...)
+// ✅ Mapeo de pesos para control de flujo unidireccional
 const EstadoTicketEnum = {
   Nueva: 0, 
   EnProceso: 1,
@@ -16,32 +17,55 @@ const EstadoTicketEnum = {
   Rechazada: 4,
 };
 
-// Estado local
 const nuevoEstado = ref<number | string>(""); 
 const nuevoComentario = ref("");
 const motivoRechazo = ref(""); 
 
-// Computed
 const isSubmitting = computed(() => store.isActionLoading);
-const esAdmin = computed(() => authStore.user?.rol === 'Admin');
+const esAdmin = computed(() => authStore.user?.rol === 'Admin' || authStore.user?.rol === 'SuperAdmin');
+
+// ✅ Obtener el peso numérico del estado actual del ticket
+const pesoEstadoActual = computed(() => {
+  const estado = store.currentTicket?.estado;
+  if (typeof estado === 'number') return estado;
+  
+  // Mapeo por si el backend envía strings
+  const mapa: Record<string, number> = {
+    'Nueva': 0, 'EnProceso': 1, 'Resuelta': 2, 'Cerrada': 3, 'Rechazada': 4
+  };
+  return mapa[estado] ?? 0;
+});
+
+// ✅ Filtrar opciones para evitar retrocesos
+const opcionesDisponibles = computed(() => {
+  const actual = pesoEstadoActual.value;
+  
+  // Si el ticket ya está Cerrado (3) o Rechazado (4), no hay más cambios posibles
+  if (actual >= 3) return [];
+
+  const todas = [
+    { label: 'En Proceso', value: EstadoTicketEnum.EnProceso, adminOnly: false },
+    { label: 'Resuelta', value: EstadoTicketEnum.Resuelta, adminOnly: false },
+    { label: 'Rechazada', value: EstadoTicketEnum.Rechazada, adminOnly: false },
+    { label: 'Cerrada ', value: EstadoTicketEnum.Cerrada, adminOnly: true },
+  ];
+
+  // Solo retornar estados con peso mayor al actual
+  return todas.filter(opt => {
+    const cumpleFlujo = opt.value > actual;
+    const cumpleRol = opt.adminOnly ? esAdmin.value : true;
+    return cumpleFlujo && cumpleRol;
+  });
+});
 
 const requiereMotivo = computed(() => {
   return Number(nuevoEstado.value) === EstadoTicketEnum.Rechazada;
 });
 
-// Sincronizar select con estado actual del ticket al abrir
 watch(() => store.currentTicket, (ticket) => {
-    if (ticket) {
-        // Mapeo inverso simple: Si el estado viene como string "EnProceso", buscamos su valor numérico
-        const estadoStr = ticket.estado; 
-        // Esto es un truco rápido. Lo ideal es que el backend mande el ID del estado.
-        // Si no, lo dejamos vacío para que el usuario elija.
-        if (estadoStr === 'EnProceso') nuevoEstado.value = 1;
-        else if (estadoStr === 'Resuelta') nuevoEstado.value = 2;
-        // etc...
-    }
+    nuevoEstado.value = ""; // Resetear al cambiar de ticket
+    motivoRechazo.value = "";
 }, { immediate: true });
-
 
 const guardarEstado = async () => {
   if (nuevoEstado.value === "") return;
@@ -51,6 +75,7 @@ const guardarEstado = async () => {
   }
   
   await store.changeStatus(Number(nuevoEstado.value), motivoRechazo.value);
+  nuevoEstado.value = ""; 
   motivoRechazo.value = "";
 };
 
@@ -64,7 +89,8 @@ const publicarComentario = async () => {
 <template>
   <div class="animate-fade-in space-y-6 pt-2">
     
-    <div class="bg-base-200/50 p-4 rounded-xl border border-base-200">
+    <div v-if="authStore.user?.rol !== 'Solicitante' && opcionesDisponibles.length > 0" 
+         class="bg-base-200/50 p-4 rounded-xl border border-base-200">
       <h3 class="text-sm font-bold text-base-content mb-3 flex items-center gap-2">
          <BaseIcon name="refresh" class="h-4 w-4"/> Gestión de Estado
       </h3>
@@ -75,11 +101,14 @@ const publicarComentario = async () => {
             v-model="nuevoEstado"
             class="select select-bordered bg-base-100 flex-1 w-full focus:outline-none focus:border-primary"
           >
-            <option disabled value="">Seleccionar nuevo estado...</option>
-            <option :value="EstadoTicketEnum.EnProceso">En Proceso</option>
-            <option :value="EstadoTicketEnum.Resuelta">Resuelta</option>
-            <option :value="EstadoTicketEnum.Rechazada" class="text-error font-bold">Rechazada</option>
-            <option :value="EstadoTicketEnum.Cerrada" :disabled="!esAdmin">Cerrada (Admin)</option>
+            <option disabled value="">Seleccionar siguiente paso...</option>
+            <option v-for="opt in opcionesDisponibles" 
+                    :key="opt.value" 
+                    :value="opt.value"
+                    :class="{'text-error font-bold': opt.value === EstadoTicketEnum.Rechazada}"
+            >
+              {{ opt.label }}
+            </option>
           </select>
 
           <button 
@@ -88,7 +117,7 @@ const publicarComentario = async () => {
             class="btn btn-primary px-6"
           >
             <span v-if="isSubmitting" class="loading loading-spinner loading-xs"></span>
-            <span v-else>Guardar</span>
+            <span v-else>Actualizar</span>
           </button>
         </div>
 
@@ -103,9 +132,14 @@ const publicarComentario = async () => {
       </div>
     </div>
 
+    <div v-else-if="pesoEstadoActual >= 3" class="alert alert-info shadow-sm py-2">
+      <BaseIcon name="info" class="h-4 w-4" />
+      <span class="text-xs">Este ticket se encuentra en un estado finalizado y no permite más cambios de estado.</span>
+    </div>
+
     <div>
       <h3 class="text-sm font-bold text-base-content mb-3 flex items-center gap-2">
-        <BaseIcon name="chat" class="h-4 w-4"/> Agregar Nota / Comentario
+        <BaseIcon name="chat" class="h-4 w-4"/>{{ authStore.user?.rol === 'Solicitante' ? 'Aclaratoria o Mensaje' : 'Agregar Nota / Comentario' }}
       </h3>
       <div class="form-control">
         <textarea
@@ -130,8 +164,3 @@ const publicarComentario = async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-</style>

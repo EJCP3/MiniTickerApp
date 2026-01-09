@@ -7,6 +7,17 @@ import { useTicketStore } from '@/stores/ticketModalStore';
 import BaseIcon from '../BaseIcon.vue';
 import TicketAssignment from './TicketAssignment.vue';
 
+const props = defineProps<{
+  ticketId?: string;
+  ticket?: any;
+}>();
+
+
+const clickid = () => {
+  console.log("Ticket ID prop:", props.ticket);
+};
+
+
 const store = useTicketStore();
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL // Ajusta tu puerto default si falla el env
 
@@ -38,10 +49,10 @@ const getNombreArchivo = (url: string) => {
   <div v-if="store.currentTicket" class="space-y-6 pt-2 animate-fade-in">
     
     <div class="space-y-2">
-      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+      <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider">
         Descripción del Problema
       </h3>
-      <div class="bg-base-200/50 p-4 rounded-xl border border-base-200 text-sm text-gray-600 leading-relaxed">
+      <div class="bg-base-200/50 p-4 rounded-xl border border-base-200 text-sm text-base-content/80 leading-relaxed">
         {{ store.currentTicket.descripcion }}
       </div>
     </div>
@@ -49,35 +60,36 @@ const getNombreArchivo = (url: string) => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
       <div class="space-y-1">
-         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+         <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider flex items-center gap-2">
            <BaseIcon name="user" class="h-4 w-4" /> Solicitante
          </h3>
-         <div class="font-medium text-gray-700">
+         <div class="font-medium text-base-content">
             {{ store.currentTicket.solicitante?.nombre || 'Desconocido' }}
          </div>
-         <div class="text-xs text-gray-500">
+         <div class="text-xs text-base-content/60">
             {{ store.currentTicket.solicitante?.email || '' }}
          </div>
       </div>
 
       <div class="space-y-1">
-       <TicketAssignment/>
+       <TicketAssignment :ticketId="props.ticketId"/>
+       
       </div>
 
       <div class="space-y-1">
-         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+         <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider flex items-center gap-2">
             <BaseIcon name="clock" class="h-4 w-4" /> Creado el
          </h3>
-         <div class="text-sm font-semibold text-gray-700">
+         <div class="text-sm font-semibold text-base-content">
             {{ store.formatBackendDate(store.currentTicket.fechaCreacion) }}
          </div>
       </div>
 
       <div class="space-y-1">
-         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+         <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider flex items-center gap-2">
             <BaseIcon name="refresh" class="h-4 w-4" /> Última Actividad
          </h3>
-         <div class="text-sm font-semibold text-gray-700">
+         <div class="text-sm font-semibold text-base-content">
             {{ store.formatBackendDate(store.currentTicket.fechaActualizacion) }}
          </div>
       </div>
@@ -85,7 +97,7 @@ const getNombreArchivo = (url: string) => {
     </div>
 
     <div v-if="store.currentTicket.archivoAdjuntoUrl" class="border-t border-base-200 pt-4">
-        <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+        <h3 class="text-xs font-bold text-base-content/50 mb-3 uppercase tracking-wider flex items-center gap-2">
             <BaseIcon name="paperClip" class="h-4 w-4" /> Documentos Adjuntos
         </h3>
         
@@ -101,22 +113,21 @@ const getNombreArchivo = (url: string) => {
             <p class="font-bold text-sm text-base-content truncate group-hover:text-primary transition-colors">
               {{ getNombreArchivo(store.currentTicket.archivoAdjuntoUrl) }}
             </p>
-            <p class="text-xs text-gray-400 font-medium mt-0.5">
+            <p class="text-xs text-base-content/50 font-medium mt-0.5">
                Clic para visualizar o descargar
             </p>
           </div>
 
-          <BaseIcon name="externalLink" class="h-4 w-4 text-gray-300 group-hover:text-primary" />
+          <BaseIcon name="externalLink" class="h-4 w-4 text-base-content opacity-30 group-hover:text-primary group-hover:opacity-100" />
         </div>
     </div>
 
   </div>
   
-  <div v-else class="text-center py-10 opacity-50">
+  <div v-else class="text-center py-10 text-base-content/50">
     Cargando...
   </div>
 </template>
-
 <style scoped>
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

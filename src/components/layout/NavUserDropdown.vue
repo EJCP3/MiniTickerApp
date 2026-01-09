@@ -5,6 +5,12 @@ import { useAuthStore } from "@/stores/authStore";
 import BaseIcon from "@/components/BaseIcon.vue";
 import type { User } from '@/types'; // Asegúrate de tener tus tipos
 
+import { useUIStore } from '@/stores/uiStore'
+
+
+const uiStore = useUIStore();
+
+
 const props = defineProps<{
   user: User | null
 }>();
@@ -20,6 +26,7 @@ const setTheme = (theme: Theme) => {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem("theme", theme);
 };
+
 
 
 // Lógica de Logout
@@ -67,6 +74,31 @@ const displayAvatar = computed(() => props.user?.fotoPerfilUrl || `https://ui-av
             <kbd class="kbd kbd-xs">Ctrl</kbd> <kbd class="kbd kbd-xs">K</kbd>
           </span>
         </button>
+      </li>
+
+
+    
+        
+    <li class="md:col-span-2 flex flex-row justify-between items-center gap-2 px-4 py-2">
+
+      <span>Formato datos</span>
+      <div class="join join-vertical  border border-base-300 w-full md:w-auto">
+        <button 
+          @click="uiStore.setViewMode('grid')" 
+          class="join-item btn btn-sm flex-1 md:flex-none"
+          :class="uiStore.viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'"
+        >
+          <BaseIcon name="gridDots" class="size-5" />
+        </button>
+        <button 
+          @click="uiStore.setViewMode('table')" 
+          class="join-item btn btn-sm flex-1 md:flex-none"
+          :class="uiStore.viewMode === 'table' ? 'btn-primary' : 'btn-ghost'"
+        >
+          <BaseIcon name="list" class="size-5" />
+        </button>
+      </div>
+  
       </li>
 
       <li>

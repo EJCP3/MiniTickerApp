@@ -3,9 +3,13 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import BaseIcon from '@/components/BaseIcon.vue';
 import { useSolicitudesStore } from '@/stores/useSolicitudesStore';
+import { useAuthStore } from '@/stores/authStore';
 // 1. Inicializar Store
 const store = useSolicitudesStore();
 const { counts, isLoading } = storeToRefs(store);
+
+
+const authStore = useAuthStore();
 
 // 2. Computed para el Total
 const totalTickets = computed(() => counts.value.todas);
@@ -69,14 +73,18 @@ const estadisticas = computed(() => [
           <BaseIcon name="history" class="size-10" /> 
         </div>
         <div>
-          <h2 class="text-xl font-bold">Estadísticas del Sistema</h2>
-          <p class="text-sm text-base-content/60">Vista general de todas las solicitudes</p>
+         <h2 class="text-xl font-bold">
+            {{ authStore.user?.rol === 'Solicitante' ? 'Mi Resumen' : 'Estadísticas del Sistema' }}
+          </h2>
+          <p class="text-sm text-base-content/60">
+            {{ authStore.user?.rol === 'Solicitante' ? 'Estado de tus solicitudes' : 'Vista general de la plataforma' }}
+          </p>
         </div>
       </div>
       
       <div class="text-left sm:text-right w-full sm:w-auto">
         <span v-if="isLoading" class="loading loading-spinner loading-lg"></span>
-        <span v-else class="text-4xl sm:text-5xl font-bold block leading-none">{{ totalTickets }}</span>
+        <span v-else class="text-4xl sm:text-5xl font-bold block leading-none">{{ counts.todas }}</span>
         
         <span class="text-sm opacity-80">Total de Solicitudes</span>
       </div>

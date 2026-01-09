@@ -15,6 +15,11 @@ const props = defineProps<{
   ticket?: any;
 }>();
 
+
+
+
+
+
 const emit = defineEmits(["close"]);
 const activeTab = ref("details");
 const store = useTicketStore();
@@ -25,7 +30,8 @@ watch(
   () => props.isOpen,
   (val) => {
     if (!val) isEditing.value = false;
-  }
+  },
+  
 );
 
 // --- 2. COMPUTADA ID ---
@@ -73,14 +79,14 @@ onUnmounted(() => {
     >
       <button
         @click="emit('close')"
-        class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 z-50"
+        class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 z-50 text-base-content"
       >
         <BaseIcon name="close" class="h-6 w-6" />
       </button>
 
       <div v-if="store.isLoading" class="h-64 flex items-center justify-center">
         <span class="loading loading-spinner loading-lg text-primary"></span>
-        <p class="ml-2 text-gray-400">Cargando ticket...</p>
+        <p class="ml-2 text-base-content/60">Cargando ticket...</p>
       </div>
 
       <div v-else-if="store.error" class="p-10 text-center text-error">
@@ -107,6 +113,7 @@ onUnmounted(() => {
             <TicketDetails
               v-if="activeTab === 'details'"
               :ticket="store.currentTicket"
+              :ticketId="targetId"
             />
 
             <TicketHistory v-else-if="activeTab === 'history'" />

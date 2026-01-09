@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { useDepartments } from '@/composables/useDepartments'
-import BaseIcon from '@/components/BaseIcon.vue' // Importamos el componente de iconos
+import { storeToRefs } from 'pinia'
+import { useDepartmentStore } from '@/stores/departmentStore'
+import BaseIcon from '@/components/BaseIcon.vue'
 
-const { totalAreas, activas, inactivas, totalSolicitudes } = useDepartments()
+const store = useDepartmentStore()
+const { totalAreas, activas, inactivas, totalSolicitudes } = storeToRefs(store)
 </script>
 
 <template>

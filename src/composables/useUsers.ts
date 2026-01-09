@@ -1,98 +1,77 @@
-import { ref, computed } from 'vue'
-import type { User, RolUsuario } from '@/types'
-
-// Estado global simulado
-const users = ref<User[]>([
-  {
-    id: '1', nombre: 'Roberto Super', email: 'roberto@empresa.com', rol: 'SuperAdmin',
-    activo: true, fechaCreacion: '2023-01-01', fotoPerfilUrl: ''
-  },
-  {
-    id: '2', nombre: 'Carlos Admin', email: 'admin@empresa.com', rol: 'Admin',
-    activo: true, fechaCreacion: '2023-06-15', fotoPerfilUrl: ''
-  },
-  {
-    id: '3', nombre: 'Pedro Gestor', email: 'pedro.gestor@empresa.com', rol: 'Gestor', 
-    activo: true, fechaCreacion: '2024-02-10', fotoPerfilUrl: ''
-  },
-  {
-    id: '4', nombre: 'Ana Solicitante', email: 'ana.user@empresa.com', rol: 'Solicitante', 
-    activo: true, fechaCreacion: '2024-03-05', fotoPerfilUrl: ''
-  }
-])
+import { ref, computed } from 'vue';
+import { useUserStore } from '@/stores/userStore';
+import type { User } from '@/types';
 
 export function useUsers() {
-  const searchQuery = ref('')
-  const filterRole = ref('Todos')
-  const filterStatus = ref('Todos')
+  const store = useUserStore();
 
-  // Filtros
+  const searchQuery = ref('');
+  const filterRole = ref('Todos');
+  const filterStatus = ref('Todos');
+
+  // --- FILTROS Y BÚSQUEDA ---
   const filteredUsers = computed(() => {
-    return users.value.filter(user => {
-      const matchSearch = user.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
-      
-      const matchRole = filterRole.value === 'Todos' || user.rol === filterRole.value
-      
-      const matchStatus = filterStatus.value === 'Todos' || 
-                          (filterStatus.value === 'Activos' && user.activo) || 
-                          (filterStatus.value === 'Inactivos' && !user.activo)
-      
-      return matchSearch && matchRole && matchStatus
-    })
-  })
+    let list = store.users || [];
 
-  // KPIs
-  const stats = computed(() => ({
-    total: users.value.length,
-    activos: users.value.filter(u => u.activo).length,
-    inactivos: users.value.filter(u => !u.activo).length,
-    superadmins: users.value.filter(u => u.rol === 'SuperAdmin').length,
-    admins: users.value.filter(u => u.rol === 'Admin').length,
-    gestores: users.value.filter(u => u.rol === 'Gestor').length,
-    solicitantes: users.value.filter(u => u.rol === 'Solicitante').length
-  }))
-
-  // Acciones
-  const createUser = (userData: any) => {
-    users.value.push({
-      id: Date.now().toString(),
-      nombre: userData.nombre,
-      email: userData.email,
-      rol: userData.rol as RolUsuario,
-      activo: userData.activo,
-      fechaCreacion: new Date().toISOString(),
-      fotoPerfilUrl: userData.foto ? `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.nombre)}&background=random` : ''
-    })
-  }
-
-  const updateUser = (userData: any) => {
-    const index = users.value.findIndex(u => u.id === userData.id)
-    if (index !== -1) {
-      users.value[index] = {
-        ...users.value[index],
-        nombre: userData.nombre,
-        email: userData.email,
-        rol: userData.rol as RolUsuario,
-        activo: userData.activo,
-        fotoPerfilUrl: userData.foto ? `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.nombre)}&background=random` : users.value[index].fotoPerfilUrl
-      }
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase();
+      list = list.filter(u => 
+        u.nombre.toLowerCase().includes(q) || 
+        u.email.toLowerCase().includes(q)
+      );
     }
+
+    if (filterRole.value !== 'Todos') {
+      list = list.filter(u => u.rol === filterRole.value);
+    }
+
+    if (filterStatus.value !== 'Todos') {
+      const activeRequested = filterStatus.value === 'Activos';
+      list = list.filter(u => u.activo === activeRequested);
+    }
+
+    return list;
+  });
+
+  // --- ESTADÍSTICAS ---
+  const stats = computed(() => {
+    const list = store.users || [];
+    return {
+      total: list.length,
+      activos: list.filter(u => u.activo).length,
+      inactivos: list.filter(u => !u.activo).length,
+      solicitantes: list.filter(u => u.rol === 'Solicitante').length,
+      gestores: list.filter(u => u.rol === 'Gestor').length,
+      admins: list.filter(u => u.rol === 'Admin' || u.rol === 'SuperAdmin').length,
+    };
+  });
+
+  // --- ACCIONES WRAPPERS ---
+  const createUser = (data: Partial<User>) => store.addUser(data);
+  
+ const updateExistingUser = async (formData: FormData) => {
+  // Extraemos el ID que acabamos de meter en el modal
+  const userId = formData.get("Id") as string;
+
+  if (!userId) {
+    console.error("Error: ID de usuario no encontrado en el FormData");
+    return;
   }
 
-  const deleteUser = (id: string) => {
-    users.value = users.value.filter(u => u.id !== id)
-  }
+  // Enviamos tanto el ID (para la URL) como el FormData (para el body)
+  return await store.updateUser({ id: userId, data: formData });
+};
+
 
   return {
-    users,
     filteredUsers,
     stats,
     searchQuery,
     filterRole,
     filterStatus,
+    isLoading: computed(() => store.status === 'pending'),
     createUser,
-    updateUser,
-    deleteUser
-  }
+    updateUser: updateExistingUser,
+    toggleStatus: (id: string, active: boolean) => store.toggleStatus({ id, active })
+  };
 }

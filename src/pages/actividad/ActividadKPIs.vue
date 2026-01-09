@@ -14,20 +14,42 @@ interface Props {
 
 const props = defineProps<Props>()
 
+  const hoyCount = computed(() => {
+  return props.activities.filter(a => {
+    const f = typeof a.fecha === 'string' ? a.fecha.toLowerCase() : '';
+    return f.includes('min') || f.includes('h') || f.includes('momento');
+  }).length;
+});
+
 // Cálculos (Computed)
 const totalCount = computed(() => props.activities.length)
 
-const todayCount = computed(() => {
-  const now = new Date()
-  return props.activities.filter(a => 
-    new Date(a.fecha).toDateString() === now.toDateString()
-  ).length
-})
+
 
 const weekCount = computed(() => {
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  return props.activities.filter(a => new Date(a.fecha) >= oneWeekAgo).length
-})
+  return props.activities.filter(a => {
+    const f = typeof a.fecha === 'string' ? a.fecha.toLowerCase() : '';
+    
+    // 1. Si ocurrió hoy (min, h, momento), por defecto es parte de la semana
+    if (f.includes('min') || f.includes('h') || f.includes('momento')) return true;
+    
+    // 2. Si el backend envía "Hace X d", verificamos que X sea menor a 7
+    if (f.includes(' d')) {
+      const dias = parseInt(f.match(/\d+/)?.[0] || '0');
+      return dias < 7;
+    }
+   
+    // 3. Si el backend envía una fecha real (ej: "04/01/2026")
+    // Intentamos parsearla solo si no es un texto relativoo
+    const fechaReal = new Date(f.includes('/') ? f.split('/').reverse().join('-') : f);
+    if (!isNaN(fechaReal.getTime())) {
+      const unaSemanaAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      return fechaReal >= unaSemanaAtras;
+    }
+
+    return false;
+  }).length;
+});
 </script>
 
 <template>
@@ -64,7 +86,7 @@ const weekCount = computed(() => {
             Hoy
           </dt>
           <dd class="text-2xl font-black text-base-content m-0">
-            {{ todayCount }}
+            {{ hoyCount }}
           </dd>
         </dl>
 

@@ -49,28 +49,28 @@ const routes: RouteRecordRaw[] = [
         path: "/solicitudes",
         component: Solicitudes,
         name: "Solicitudes",
-        // meta: {
-        //   allowedRoles: ["Solicitante", "Gestor", "Admin", "SuperAdmin"],
-        // },
+        meta: {
+          allowedRoles: ["Solicitante", "Gestor", "Admin", "SuperAdmin"],
+        },
       },
-      // {
-      //   path: "/departamentos",
-      //   component: Departamentos,
-      //   name: "Departamentos",
-      //   meta: { allowedRoles: ["Admin", "SuperAdmin"] },
-      // },
-      // {
-      //   path: "/actividad",
-      //   component: Actividad,
-      //   name: "Actividad",
-      //   meta: { allowedRoles: ["Admin", "SuperAdmin"] },
-      // },
-      // {
-      //   path: "/usuarios",
-      //   component: Usuarios,
-      //   name: "Usuarios",
-      //   meta: { allowedRoles: ["SuperAdmin"] },
-      // },
+      {
+        path: "/area",
+        component: Departamentos,
+        name: "area",
+        meta: { allowedRoles: ["Admin", "SuperAdmin"] },
+      },
+      {
+        path: "/actividad",
+        component: Actividad,
+        name: "Actividad",
+        meta: { allowedRoles: ["Admin", "SuperAdmin"] },
+      },
+      {
+        path: "/usuarios",
+        component: Usuarios,
+        name: "Usuarios",
+        meta: { allowedRoles: ["SuperAdmin"] },
+      },
     ],
 
     
@@ -87,7 +87,7 @@ const router = createRouter({
 });
 
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async(to, from, next) => {
   const authStore = useAuthStore();
 
   const isAuthenticated = !!authStore.token;
@@ -110,7 +110,7 @@ router.beforeEach((to, from, next) => {
       }
     }
   }
-
+ 
   // 4. Todo correcto
   next();
 });

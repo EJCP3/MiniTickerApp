@@ -1,128 +1,131 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { User } from '@/types/users'
-import { areasOptions } from '@/types/users'
-import BaseIcon from '@/components/BaseIcon.vue'
+import { ref, computed } from "vue";
+import type { User } from "@/types/users";
+import { areasOptions } from "@/types/users";
+import BaseIcon from "@/components/BaseIcon.vue";
 
-const props = defineProps<{ user: User }>()
-const emit = defineEmits(['edit', 'delete'])
+const props = defineProps<{ user: User }>();
+const emit = defineEmits(["edit", "toggleStatus"]);
 
 // Estado para el modal de confirmación
-const showDeleteConfirm = ref(false)
-
-// Helpers
-// const areaName = computed(() => {
-//   if (!props.user.area) return 'General'
-//   return areasOptions.find(a => a.value === props.user.area)?.label || 'Desconocida'
-// })
+const showDeleteConfirm = ref(false);
 
 const badgeClass = computed(() => {
   switch (props.user.rol) {
-    case 'SuperAdmin': return 'badge-secondary badge-soft'
-    case 'Admin': return 'badge-primary badge-soft'
-    case 'Gestor': return 'badge-accent badge-soft'
-    default: return 'badge-soft'
+    case "SuperAdmin":
+      return "badge-secondary badge-soft";
+    case "Admin":
+      return "badge-primary badge-soft";
+    case "Gestor":
+      return "badge-accent badge-soft";
+    default:
+      return "badge-soft";
   }
-})
+});
 
-// Función para confirmar eliminación
-const confirmDelete = () => {
-  emit('delete', props.user.id)
-  showDeleteConfirm.value = false
-}
+const handleToggleStatus = () => {
+  emit("toggleStatus", props.user.id, !props.user.activo);
+  
+};
 </script>
 
 <template>
-  <article class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all group relative">
+  <article
+    class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-all group relative"
+  >
     <div class="card-body p-6">
-      
       <header class="flex justify-between items-start">
         <div class="flex gap-4">
-          
           <figure class="avatar">
-            <div class="w-12 h-12 rounded-full ring ring-base-200 ring-offset-base-100 ring-offset-2">
-              <img 
-                :src="user.fotoPerfilUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre)}&background=random`" 
-                :alt="`Avatar de ${user.nombre}`" 
+            <div
+              class="w-12 h-12 rounded-full ring ring-base-200 ring-offset-base-100 ring-offset-2"
+            >
+              <img
+                :src="
+                  user.fotoPerfilUrl ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.nombre
+                  )}&background=random`
+                "
+                :alt="`Avatar de ${user.nombre}`"
               />
             </div>
           </figure>
-          
+
           <div class="overflow-hidden">
-            <h3 class="font-bold text-lg leading-tight truncate" :title="user.nombre">
+            <h3
+              class="font-bold text-lg leading-tight truncate"
+              :title="user.nombre"
+            >
               {{ user.nombre }}
             </h3>
-            <p class="text-sm text-base-content/60 mb-2 truncate" :title="user.email">
+            <p
+              class="text-sm text-base-content/60 mb-2 truncate"
+              :title="user.email"
+            >
               {{ user.email }}
             </p>
-            
+
             <div class="flex flex-wrap gap-2">
-              <span class="badge badge-sm gap-1.5 py-3 pl-2 pr-3" :class="badgeClass">
+              <span
+                class="badge badge-sm gap-1.5 py-3 pl-2 pr-3"
+                :class="badgeClass"
+              >
                 {{ user.rol }}
               </span>
-                <!-- <span v-if="user.area " class="badge badge-ghost badge-sm opacity-80">
-                  {{ areaName }}
-                </span> -->
+              <span
+                v-if="user.areaNombre"
+                class="badge badge-ghost badge-sm opacity-80"
+              >
+                {{ user.areaNombre }}
+              </span>
             </div>
           </div>
         </div>
 
-        <div class="tooltip tooltip-left" :data-tip="user.activo ? 'Activo' : 'Inactivo'">
-          <div 
-            class="w-3 h-3 rounded-full mt-2" 
-            :class="user.activo ? 'bg-success shadow-[0_0_8px] shadow-success' : 'bg-error shadow-[0_0_8px] shadow-error'"
+        <div
+          class="tooltip tooltip-left"
+          :data-tip="user.activo ? 'Activo' : 'Inactivo'"
+        >
+          <div
+            class="w-3 h-3 rounded-full mt-2"
+            :class="
+              user.activo
+                ? 'bg-success shadow-[0_0_8px] shadow-success'
+                : 'bg-error shadow-[0_0_8px] shadow-error'
+            "
             aria-hidden="true"
           ></div>
         </div>
       </header>
 
       <footer class="mt-4 pt-4 border-t border-base-200 flex gap-2">
-        <button 
-          @click="$emit('edit', user)" 
+        <button
+          @click="$emit('edit', user)"
           class="btn btn-sm btn-outline flex-1 gap-2 hover:btn-primary"
         >
           <BaseIcon name="edit" class="size-6" />
           Editar
         </button>
-        
-        <button 
-          @click="showDeleteConfirm = true" 
-          class="btn btn-sm btn-outline btn-error square"
-          aria-label="Eliminar usuario"
+
+        <button
+          @click="handleToggleStatus"
+          class="btn btn-sm flex-1 gap-2"
+          :class="
+            user.activo
+              ? 'btn-ghost text-error hover:bg-error/10'
+              : 'btn-success text-white'
+          "
         >
-          <BaseIcon name="trash" class="size-6" />
+          <BaseIcon
+            :name="user.activo ? 'userMinus' : 'userCheck'"
+            class="size-5"
+          />
+          {{ user.activo ? "Desactivar" : "Activar" }}
         </button>
       </footer>
-
     </div>
 
-    <Teleport to="body">
-      <dialog class="modal" :class="{ 'modal-open': showDeleteConfirm }">
-        <div class="modal-box w-full max-w-sm bg-base-100 text-center shadow-xl border border-base-200">
-          
-          <div class="flex size-14  justify-center mb-4 text-error bg-error/10 rounded-full p-1 mx-auto">
-            <BaseIcon name="alertCircle" class="size-12" />
-          </div>
-          
-          <h3 class="font-bold text-lg text-base-content">¿Eliminar Usuario?</h3>
-          <p class="py-4 text-sm text-base-content/70">
-            Estás a punto de eliminar a <span class="font-bold text-base-content">{{ user.nombre }}</span>. 
-            Esta acción no se puede deshacer.
-          </p>
-          
-          <div class="modal-action justify-center gap-2 mt-2">
-            <button @click="showDeleteConfirm = false" class="btn btn-sm btn-ghost">Cancelar</button>
-            <button @click="confirmDelete" class="btn btn-sm btn-error text-white">
-              Sí, eliminar
-            </button>
-          </div>
-        </div>
-        
-        <form method="dialog" class="modal-backdrop">
-          <button @click="showDeleteConfirm = false">close</button>
-        </form>
-      </dialog>
-    </Teleport>
-
+   
   </article>
 </template>

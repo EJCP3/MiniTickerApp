@@ -25,14 +25,38 @@ export default {
     return [];
   },
 
-  /**
-   * (Opcional) Obtener solo gestores si tu backend soporta filtrado
-   * Ejemplo: /api/users?rol=Gestor
-//    */
-  //   async getManagers(): Promise<User[]> {
-  //     const response = await apiClient.get('/api/users', {
-  //         params: { rol: 'Gestor' } // Ajusta según cómo filtre tu backend
-  //     });
-  //     return Array.isArray(response.data) ? response.data : (response.data.items || []);
-  //   }
-};
+  async getUserById(userId: string): Promise<User | null> {
+    // GET /api/users/{userId}
+    const response = await apiClient.get(`/api/users/${userId}`);
+    return response.data || null;
+},
+
+ async createUser(userData: FormData): Promise<User> {
+  // Al enviar un FormData, Axios configura automáticamente el Content-Type a multipart/form-data
+  const response = await apiClient.post("/api/users", userData);
+  return response.data;
+},
+
+ async updateUser(userId: string, userData: FormData): Promise<User> {
+  // La URL debe quedar como /api/users/{userId}
+  const response = await apiClient.put(`/api/users/${userId}`, userData);
+  return response.data;
+},
+
+  async toggleUserStatus(userId: string, isActive: boolean): Promise<any> {
+   
+    const url = isActive 
+      ? `/api/users/${userId}/activate` 
+      : `/api/users/${userId}/deactivate`;
+    
+    const response = await apiClient.put(url);
+    return response.data;
+  },
+
+async getActiveManagers(): Promise<User[]> {
+  // Llamamos al endpoint que ya devuelve la lista filtrada desde el backend
+  const response = await apiClient.get("/api/catalog/managers-selection");
+  return response.data;
+}
+
+}

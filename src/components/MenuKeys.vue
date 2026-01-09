@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import "ninja-keys";
 import { icons } from "@/utils/icons";
-
+import { useAuthStore } from "@/stores/authStore"; // Importa tu store de auth
 interface NinjaAction {
   id: string;
   title: string;
@@ -12,12 +12,14 @@ interface NinjaAction {
   handler?: () => void;
   children?: NinjaAction[];
   keywords?: string;
+  roles?: string[];
 }
-
+const authStore = useAuthStore();
+const userRole = computed(() => authStore.user?.rol);
 const router = useRouter();
 const placeholder = ref("Buscar o ejecutar comando...");
 
-const hotkeys = ref<NinjaAction[]>([
+const allActions = ref<NinjaAction[]>([
   {
     id: "home",
     title: "Home",
@@ -32,6 +34,7 @@ const hotkeys = ref<NinjaAction[]>([
     title: "Crear Solicitud",
     hotkey: "ctrl+s",
     icon: icons.receipt,
+    roles: ["Solicitante", "Admin", "SuperAdmin"],
     handler: () => {
       router.push("/crear-solicitud");
     },
@@ -40,6 +43,7 @@ const hotkeys = ref<NinjaAction[]>([
     id: "solicitudes",
     title: "Ver Solicitudes",
     hotkey: "ctrl+d",
+    roles: ["Solicitante", "Admin", "SuperAdmin"],
     icon: icons.documentText,
     handler: () => {
       router.push("/solicitudes");
@@ -47,12 +51,13 @@ const hotkeys = ref<NinjaAction[]>([
   },
  
   {
-    id: "departamentos",
-    title: "Ver Departamentos",
+    id: "area",
+    title: "Ver Área",
     hotkey: "ctrl+f",
+    roles: ["Admin", "SuperAdmin"],
     icon: icons.building,
     handler: () => {
-      router.push("/departamentos");
+      router.push("/area");
     },
   },
 
@@ -60,6 +65,7 @@ const hotkeys = ref<NinjaAction[]>([
     id: "actividad",
     title: "Ver Actividad",
     hotkey: "ctrl+g",
+    roles: ["Admin", "SuperAdmin"],
     icon: icons.history,
     handler: () => {
       router.push("/actividad");
@@ -69,6 +75,7 @@ const hotkeys = ref<NinjaAction[]>([
     id: "usuarios",
     title: "Gestionar Usuarios",
     hotkey: "ctrl+h",
+    roles: ["SuperAdmin"],
     icon: icons.user,
     handler: () => {
       router.push("/usuarios");
@@ -127,6 +134,17 @@ const hotkeys = ref<NinjaAction[]>([
   },
 ]);
 
+const hotkeys = computed(() => {
+  return allActions.value.filter(action => {
+    // Si la acción no tiene restricciones de rol, se muestra a todos
+    if (!action.roles) return true;
+    
+    // Si tiene roles, verificamos si el rol del usuario actual está incluido
+    return action.roles.includes(userRole.value || "");
+  });
+});
+
+
 const openNinjaKeys = () => {
   const ninja = document.querySelector("ninja-keys") as any;
   if (ninja) {
@@ -137,6 +155,8 @@ const openNinjaKeys = () => {
 defineExpose({
   openNinjaKeys,
 });
+
+
 </script>
 
 <template>

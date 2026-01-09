@@ -1,33 +1,4 @@
-// // src/types/modal.ts (ARCHIVO ÚNICO DE VERDAD)
 
-// export interface HistorialItem {
-//   fecha: string ;
-//   titulo: string;
-//   subtitulo?: string;
-//   usuario: string;
-//   descripcion: string;
-//   tipoEvento?: number;
-// }
-
-// export interface Ticket {
-//   id: number | string; // Permitimos ambos
-//   codigo: string;
-//   categoria: string;
-//   prioridad: string;
-//   estado: string;
-//   titulo: string;
-//   descripcion: string;
-//   solicitante: string;
-//   fechaCreacion: string | Date;
-//   ultimaActualizacion: string | Date;
-  
-//   // --- CAMPOS NUEVOS OBLIGATORIOS PARA QUE NO DE ERROR ---
-//   gestorId?: string;       
-//   responsable?: string;    
-//   historial?: HistorialItem[]; // Opcional con '?'
-//   archivoUrl?: string; 
-//   archivoNombre?: string;
-// }
 export interface UsuarioDto {
   id: string;
   nombre: string;
@@ -39,6 +10,7 @@ export interface UsuarioDto {
 export interface AreaDto {
   id: string;
   nombre: string;
+  responsableId?: string;
 }
 
 export interface HistorialDto {

@@ -82,13 +82,13 @@ const toggleOrden = () => {
   <div class="animate-fade-in pt-2">
     
     <div class="flex items-center justify-between pb-4 border-b border-base-200 mb-6 pl-2">
-        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+        <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider flex items-center gap-2">
             <BaseIcon name="clock" class="h-4 w-4"/> Línea de Tiempo
         </h3>
         
         <button 
             @click="toggleOrden"
-            class="btn btn-xs btn-ghost gap-2 text-gray-500 hover:text-primary transition-colors"
+            class="btn btn-xs btn-ghost gap-2 text-base-content/60 hover:text-primary transition-colors"
         >
             <span class="text-[10px] font-semibold">
                 {{ ordenAscendente ? 'Más Antiguos' : 'Más Recientes' }}
@@ -121,7 +121,7 @@ const toggleOrden = () => {
                 <h4 class="font-bold text-sm text-base-content leading-tight">
                     {{ item.titulo }}
                 </h4>
-                <span class="text-xs text-gray-400 font-medium whitespace-nowrap ml-4">
+                <span class="text-xs text-base-content/50 font-medium whitespace-nowrap ml-4">
                     {{ store.formatBackendDate(item.fecha) }}
                 </span>
             </div>
@@ -131,7 +131,7 @@ const toggleOrden = () => {
             </div>
 
             <div class="bg-base-100 border border-base-200 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow">
-                <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                <p class="text-sm text-base-content/80 leading-relaxed whitespace-pre-wrap">
                     {{ item.descripcion }}
                 </p>
             </div>
@@ -140,12 +140,11 @@ const toggleOrden = () => {
     </div>
 
     <div v-if="!historialOrdenado || historialOrdenado.length === 0" class="flex flex-col items-center justify-center py-12 opacity-50">
-      <p class="text-gray-500 font-medium">No hay historial disponible</p>
+      <p class="text-base-content/50 font-medium">No hay historial disponible</p>
     </div>
 
   </div>
 </template>
-
 <style scoped>
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

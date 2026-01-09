@@ -1,451 +1,273 @@
-<!-- <script setup lang="ts">
-import { createTicketSchema } from '@/schema/createTicketSchema'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import BaseIcon from '@/components/BaseIcon.vue' // Ajusta la ruta a tu componente de iconos
+<script setup lang="ts">
+import { ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useDepartmentStore } from "@/stores/departmentStore";
+import { useTicketActions } from "@/composables/useTickets"; // Asegúrate de tener este composable
+import BaseIcon from "@/components/BaseIcon.vue";
 
-const router = useRouter()
+const router = useRouter();
+const deptStore = useDepartmentStore();
+const { createTicket, isSubmitting } = useTicketActions();
 
-// --- ESTADO ---
-type Step = 'selection' | 'form'
-const currentStep = ref<Step>('selection')
-const isSubmitting = ref(false)
+// --- ESTADO DE NAVEGACIÓN LOCAL ---
+type Step = "selection" | "form";
+const currentStep = ref<Step>("selection");
 
-// Estado del formulario
+// --- ESTADO DEL FORMULARIO ---
 const formData = ref({
-  AreaId: '',
-  TipoSolicitudId: '',
-  Prioridad: 'Media',
-  Asunto: '',
-  Descripcion: '',
-  ArchivoAdjunto: null
-})
+  AreaId: "",
+  TipoSolicitudId: "",
+  Prioridad: 1,
+  Asunto: "",
+  Descripcion: "",
+  ArchivoAdjunto: null as any,
+});
 
-// Generamos el schema reactivo basado en formData
-const schema = computed(() => createTicketSchema(formData.value))
+// --- LÓGICA DE CASCADA (Reactividad con Pinia Colada) ---
+// Al cambiar el AreaId, notificamos al store para que dispare la query de tipos
+watch(() => formData.value.AreaId, (newId) => {
+  formData.value.TipoSolicitudId = ""; // Limpiar selección previa
+  deptStore.selectAreaForTypes(newId);
+});
 
-// --- FUNCIONES ---
-const iniciarSolicitud = (areaId: string | null) => {
-  formData.value = {
-    AreaId: areaId || '',
-    TipoSolicitudId: '',
-    Prioridad: 'Media',
-    Asunto: '',
-    Descripcion: '',
-    ArchivoAdjunto: null
+// --- ESQUEMA DINÁMICO DE FORMKIT ---
+const schema = computed(() => [
+  {
+    $el: "div",
+    // Aumentamos el gap a 6 para separar las columnas de Area y Prioridad
+    attrs: { class: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" }, 
+    children: [
+      {
+        $formkit: "select",
+        name: "AreaId",
+        label: "Área de Atención",
+        placeholder: "Selecciona el área",
+        options: deptStore.areasOptions,
+        validation: "required",
+        outerClass: "mb-0", // No necesita margen inferior aquí porque el contenedor div tiene mb-6
+        inputClass: "select select-bordered w-full focus:select-primary bg-base-100 h-12", // Añadido h-12
+        labelClass: "label-text font-bold text-xs uppercase text-gray-500 mb-2 block",
+      },
+      {
+        $formkit: "select",
+        name: "Prioridad",
+        label: "Prioridad",
+        value: 1,
+        options: [
+          { label: "Baja", value: 0 },
+          { label: "Media", value: 1 },
+          { label: "Alta", value: 2 },
+        ],
+        outerClass: "mb-0",
+        inputClass: "select select-bordered w-full focus:select-primary bg-base-100 h-12", // Añadido h-12
+        labelClass: "label-text font-bold text-xs uppercase text-gray-500 mb-2 block",
+      },
+    ],
+  },
+  {
+    $formkit: "select",
+    name: "TipoSolicitudId",
+    label: "Tipo de Solicitud",
+    placeholder: deptStore.isLoadingTypes ? "Cargando tipos..." : "Selecciona el motivo",
+    options: deptStore.tiposOptions,
+    validation: "required",
+    disabled: !formData.value.AreaId || deptStore.isLoadingTypes,
+    help: !formData.value.AreaId ? "Selecciona primero un área arriba" : "",
+    outerClass: "mb-6", // Espaciado inferior
+    inputClass: "select select-bordered w-full focus:select-primary bg-base-100 h-12",
+    labelClass: "label-text font-bold text-xs uppercase text-gray-500 mb-2 block",
+    helpClass: "text-[10px] mt-1 text-primary font-medium"
+  },
+  {
+    $formkit: "text",
+    name: "Asunto",
+    label: "Asunto",
+    placeholder: "¿Qué sucede? (Resumen corto)",
+    validation: "required|length:5,100",
+    outerClass: "mb-6", // Espaciado inferior
+    inputClass: "input input-bordered w-full focus:input-primary font-semibold h-12",
+    labelClass: "label-text font-bold text-xs uppercase text-gray-500 mb-2 block",
+  },
+  {
+    $formkit: "textarea",
+    name: "Descripcion",
+    label: "Descripción Detallada",
+    placeholder: "Por favor, danos más detalles para ayudarte mejor...",
+    validation: "required|length:10",
+    outerClass: "mb-6", // Espaciado inferior
+    inputClass: "textarea textarea-bordered w-full h-36 focus:textarea-primary leading-relaxed p-4", // Aumentado h y p
+    labelClass: "label-text font-bold text-xs uppercase text-gray-500 mb-2 block",
+  },
+  {
+    $formkit: "file",
+    name: "ArchivoAdjunto",
+    label: "Evidencia o Capturas (Opcional)",
+    accept: ".pdf,.jpg,.png,.doc,.docx",
+    outerClass: "mb-2", // Menor margen aquí porque siguen los botones
+    inputClass: "file-input file-input-bordered file-input-primary w-full text-sm h-12",
+    labelClass: "label-text font-bold text-xs uppercase text-gray-500 mb-2 block",
+    // Para ocultar la lista de archivos que mencionaste antes:
+    fileItemClass: "hidden",
+    fileListClass: "hidden"
   }
-  currentStep.value = 'form'
-}
+]);
+
+// --- HANDLERS ---
+const iniciarSolicitud = (areaId: string | null) => {
+  formData.value.AreaId = areaId || "";
+  currentStep.value = "form";
+};
 
 const cancelar = () => {
-  currentStep.value = 'selection'
-}
+  currentStep.value = "selection";
+};
 
 const handleSubmit = async (data: any) => {
-  isSubmitting.value = true
-  
-  const payload = {
-    ...data,
-    SolicitanteId: 'user-actual-id', 
-    Estado: 'Nueva',
-    FechaCreacion: new Date().toISOString(),
-    ArchivoAdjuntoUrl: data.ArchivoAdjunto?.[0]?.name || null
+  const formPayload = new FormData();
+  formPayload.append("AreaId", data.AreaId);
+  formPayload.append("TipoSolicitudId", data.TipoSolicitudId);
+  formPayload.append("Prioridad", data.Prioridad.toString());
+  formPayload.append("Asunto", data.Asunto);
+  formPayload.append("Descripcion", data.Descripcion);
+
+  if (data.ArchivoAdjunto && data.ArchivoAdjunto.length > 0) {
+    formPayload.append("ArchivoAdjunto", data.ArchivoAdjunto[0].file);
   }
 
-  console.log("Enviando Ticket (Schema):", payload)
-  await new Promise(r => setTimeout(r, 1000))
-  
-  alert('Ticket Creado Correctamente')
-  router.push('/solicitudes')
-  isSubmitting.value = false
-}
-
-// Datos estáticos para el paso 1
-const areas = [
-  { label: 'Tecnología (TI)', value: 'area-ti' },
-  { label: 'Mantenimiento', value: 'area-mant' },
-  { label: 'Transporte', value: 'area-trans' },
-  { label: 'Compras', value: 'area-comp' },
-]
+  try {
+    await createTicket(formPayload);
+    // Aquí puedes disparar una notificación de éxito
+    router.push("/mis-solicitudes");
+  } catch (error) {
+    console.error("Error al crear ticket", error);
+  }
+};
 </script>
 
 <template>
   <main class="min-h-screen bg-base-200 flex items-center justify-center p-4">
-
     <section 
       v-if="currentStep === 'selection'" 
-      aria-label="Selección de tipo de solicitud"
-      class="card w-full max-w-4xl h-[500px] bg-primary text-primary-content shadow-2xl relative overflow-hidden flex flex-col items-center justify-center animate-fade-in"
+      class="card w-full max-w-4xl h-[550px] bg-primary text-primary-content shadow-2xl relative overflow-hidden flex flex-col items-center justify-center animate-fade-in"
     >
-      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full" aria-hidden="true"></div>
-      <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-tr-full" aria-hidden="true"></div>
+      <div class="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-bl-full pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-tr-full pointer-events-none"></div>
 
-      <div class="z-10 flex flex-col items-center text-center">
+      <div class="z-10 flex flex-col items-center text-center px-6">
         <button 
           @click="iniciarSolicitud(null)"
-          class="group flex flex-col items-center mb-8 transition-transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary-content/50 rounded-3xl p-4"
-          aria-label="Crear nueva solicitud general"
+          class="group flex flex-col items-center mb-10 transition-all hover:scale-105"
         >
-          <div class="w-24 h-24 bg-primary-content/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-4 group-hover:bg-primary-content/30 transition-colors shadow-lg border border-primary-content/20">
-            <BaseIcon name="plus" class="h-10 w-10 text-primary-content" />
+          <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mb-4 border border-white/30 shadow-2xl group-hover:bg-white/30">
+            <BaseIcon name="plus" class="h-10 w-10 text-white" />
           </div>
-          <h2 class="text-3xl font-bold">Nueva Solicitud</h2>
-          <p class="text-primary-content/80 text-sm mt-2">Crea una nueva solicitud de servicio</p>
+          <h2 class="text-4xl font-black tracking-tight">Nueva Solicitud</h2>
+          <p class="text-primary-content/70 mt-2 font-medium italic">¿En qué podemos ayudarte hoy?</p>
         </button>
 
-        <div class="flex flex-wrap justify-center gap-3 px-8">
-          <button
-            v-for="area in areas"
-            :key="area.value"
-            @click="iniciarSolicitud(area.value)"
-            class="btn btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary rounded-full btn-sm normal-case font-semibold transition-all"
-          >
-            {{ area.label }}
-          </button>
+        <div class="space-y-4 w-full max-w-2xl">
+          <p class="text-xs uppercase font-bold tracking-widest opacity-50 mb-2">O elige un área directa</p>
+          <div v-if="deptStore.areasOptions.length > 0" class="flex flex-wrap justify-center gap-3">
+            <button
+              v-for="area in deptStore.areasOptions"
+              :key="area.value"
+              @click="iniciarSolicitud(area.value)"
+              class="btn btn-sm btn-outline border-white/40 text-white hover:bg-white hover:text-primary rounded-xl px-6 font-bold"
+            >
+              {{ area.label }}
+            </button>
+          </div>
+          <div v-else-if="deptStore.isLoadingAreas" class="loading loading-dots loading-md opacity-50"></div>
+          <p v-else class="text-sm opacity-60">No hay áreas de servicio activas disponibles.</p>
         </div>
       </div>
     </section>
 
     <section 
       v-else 
-      aria-label="Formulario de nueva solicitud"
-      class="card bg-base-100 shadow-xl w-full max-w-2xl animate-slide-up"
+      class="card bg-base-100 shadow-2xl w-full max-w-2xl overflow-hidden animate-slide-up"
     >
-      <header class="p-6 border-b border-base-200 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-            <BaseIcon name="documentText" class="size-10" />
+      <header class="bg-primary/5 p-6 border-b border-base-200 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
+            <BaseIcon name="documentText" class="h-6 w-6" />
           </div>
-          <h2 class="text-xl font-bold text-base-content">Detalles de Solicitud</h2>
+          <div>
+            <h2 class="text-xl font-bold text-base-content">Detalles de la Solicitud</h2>
+            <p class="text-xs text-base-content/50 font-medium">Completa la información para procesar tu ticket</p>
+          </div>
         </div>
-        <button @click="cancelar" class="btn btn-sm btn-ghost text-base-content/60 hover:text-base-content">
-          Cancelar
+        <button @click="cancelar" class="btn btn-sm btn-circle btn-ghost">
+          <BaseIcon name="close" class="size-5" />
         </button>
       </header>
 
       <div class="p-8">
-        
         <FormKit 
           type="form" 
           v-model="formData"
           :actions="false" 
-          @submit="handleSubmit"
-          form-class="space-y-4"
-        >
-          
-          <FormKitSchema :schema="schema" :data="formData" />
-
-          <div class="pt-4">
-            <button 
-              type="submit" 
-              :disabled="isSubmitting"
-              class="btn btn-primary w-full shadow-lg shadow-primary/20 text-white font-bold"
-            >
-              <span v-if="isSubmitting" class="loading loading-spinner"></span>
-              <span v-else>Enviar Solicitud</span>
-            </button>
-          </div>
-
-        </FormKit>
-
-      </div>
-    </section>
-
-  </main>
-</template>
-
-<style scoped>
-.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-.animate-slide-up { animation: slideUp 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Ajustes globales para FormKit + DaisyUI */
-:deep(.formkit-outer) { margin-bottom: 0.5rem; }
-:deep(.formkit-message) { color: oklch(var(--er)); font-size: 0.875rem; margin-top: 0.25rem; }
-</style> --><script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import BaseIcon from '@/components/BaseIcon.vue' 
-import catalogoService from '@/services/catalogoService' // Asegúrate de tener este servicio creado
-import ticketService from '@/services/ticketService'     // Asegúrate de tener este servicio creado
-
-const router = useRouter()
-
-// --- ESTADO ---
-type Step = 'selection' | 'form'
-const currentStep = ref<Step>('selection')
-const isSubmitting = ref(false)
-const isLoadingTypes = ref(false)
-
-// Listas para los selects
-const areasList = ref<{ label: string; value: string }[]>([])
-const tiposList = ref<{ label: string; value: string }[]>([])
-
-// Estado del formulario
-const formData = ref({
-  AreaId: '',
-  TipoSolicitudId: '',
-  Prioridad: 1, // 0: Baja, 1: Media, 2: Alta (Según tu backend)
-  Asunto: '',
-  Descripcion: '',
-  ArchivoAdjunto: null as any
-})
-
-// --- CARGA INICIAL ---
-onMounted(async () => {
-  try {
-    const areas = await catalogoService.getAreas();
-    // Mapeamos para FormKit { label, value }
-    areasList.value = areas.map(a => ({ label: a.nombre, value: a.id }));
-  } catch (error) {
-    console.error("Error cargando áreas", error);
-  }
-})
-
-// --- WATCHER: Carga en Cascada (Área -> Tipos) ---
-watch(() => formData.value.AreaId, async (newAreaId) => {
-  // Limpiar tipos anteriores
-  tiposList.value = [];
-  formData.value.TipoSolicitudId = ''; 
-  
-  if (!newAreaId) return;
-
-  isLoadingTypes.value = true;
-  try {
-    const tipos = await catalogoService.getTipoSolicitudes(newAreaId);
-    tiposList.value = tipos.map(t => ({ label: t.nombre, value: t.id }));
-  } catch (error) {
-    console.error("Error cargando tipos", error);
-  } finally {
-    isLoadingTypes.value = false;
-  }
-});
-
-// --- SCHEMA DE FORMKIT (COMPUTED) ---
-// Es computed para que se actualice cuando areasList o tiposList cambien
-const schema = computed(() => [
-  {
-    $el: 'div',
-    attrs: { class: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
-    children: [
-      {
-        $formkit: 'select',
-        name: 'AreaId',
-        label: 'Área',
-        placeholder: 'Selecciona el área',
-        options: areasList.value,
-        validation: 'required',
-        outerClass: 'formkit-outer',
-        inputClass: 'select select-bordered w-full focus:select-primary',
-        labelClass: 'label-text font-bold text-xs uppercase text-gray-400 mb-1 block'
-      },
-      {
-        $formkit: 'select',
-        name: 'Prioridad',
-        label: 'Prioridad',
-        value: 1,
-        options: [
-          { label: 'Baja', value: 0 },
-          { label: 'Media', value: 1 },
-          { label: 'Alta', value: 2 }
-        ],
-        outerClass: 'formkit-outer',
-        inputClass: 'select select-bordered w-full focus:select-primary',
-        labelClass: 'label-text font-bold text-xs uppercase text-gray-400 mb-1 block'
-      }
-    ]
-  },
-  {
-    $formkit: 'select',
-    name: 'TipoSolicitudId',
-    label: 'Tipo de Solicitud',
-    placeholder: 'Selecciona el tipo de problema',
-    options: tiposList.value,
-    validation: 'required',
-    // Deshabilitar si no hay área seleccionada o si está cargando
-    disabled: !formData.value.AreaId || isLoadingTypes.value,
-    help: !formData.value.AreaId ? 'Selecciona primero un área arriba' : '',
-    outerClass: 'formkit-outer',
-    inputClass: 'select select-bordered w-full focus:select-primary',
-    labelClass: 'label-text font-bold text-xs uppercase text-gray-400 mb-1 block'
-  },
-  {
-    $formkit: 'text',
-    name: 'Asunto',
-    label: 'Asunto',
-    placeholder: 'Breve título del problema',
-    validation: 'required|length:5,100',
-    outerClass: 'formkit-outer',
-    inputClass: 'input input-bordered w-full focus:input-primary font-bold text-gray-700',
-    labelClass: 'label-text font-bold text-xs uppercase text-gray-400 mb-1 block'
-  },
-  {
-    $formkit: 'textarea',
-    name: 'Descripcion',
-    label: 'Descripción Detallada',
-    placeholder: 'Explica qué sucede...',
-    validation: 'required|length:10',
-    outerClass: 'formkit-outer',
-    inputClass: 'textarea textarea-bordered w-full h-32 text-base leading-relaxed focus:textarea-primary',
-    labelClass: 'label-text font-bold text-xs uppercase text-gray-400 mb-1 block'
-  },
-  {
-    $formkit: 'file',
-    name: 'ArchivoAdjunto',
-    label: 'Evidencia (Opcional)',
-    accept: '.pdf,.jpg,.png,.doc,.docx',
-    outerClass: 'formkit-outer',
-    inputClass: 'file-input file-input-bordered file-input-primary w-full text-sm',
-    labelClass: 'label-text font-bold text-xs uppercase text-gray-400 mb-1 block'
-  }
-])
-
-// --- FUNCIONES ---
-const iniciarSolicitud = (areaId: string | null) => {
-  // Resetear form
-  formData.value = {
-    AreaId: areaId || '',
-    TipoSolicitudId: '',
-    Prioridad: 1,
-    Asunto: '',
-    Descripcion: '',
-    ArchivoAdjunto: null
-  }
-  currentStep.value = 'form'
-}
-
-const cancelar = () => {
-  currentStep.value = 'selection'
-}
-
-const handleSubmit = async (data: any) => {
-  isSubmitting.value = true
-  
-  try {
-    // 1. Crear FormData para envío de archivos
-    const formPayload = new FormData();
-    
-    formPayload.append('AreaId', data.AreaId);
-    formPayload.append('TipoSolicitudId', data.TipoSolicitudId);
-    formPayload.append('Prioridad', data.Prioridad.toString());
-    formPayload.append('Asunto', data.Asunto);
-    formPayload.append('Descripcion', data.Descripcion);
-
-    // FormKit devuelve un array [{ file: FileObject, name: "..." }]
-    if (data.ArchivoAdjunto && data.ArchivoAdjunto.length > 0) {
-      formPayload.append('ArchivoAdjunto', data.ArchivoAdjunto[0].file);
-    }
-
-    // 2. Enviar al backend
-    await ticketService.create(formPayload);
-    
-    // 3. Redirección y Feedback
-    // Puedes usar un toast aquí
-    alert('Ticket creado correctamente');
-    router.push('/tickets'); // O donde quieras redirigir
-    
-  } catch (error) {
-    console.error("Error al crear ticket", error);
-    alert('Hubo un error al crear la solicitud');
-  } finally {
-    isSubmitting.value = false
-  }
-}
-</script>
-
-<template>
-  <main class="min-h-screen bg-base-200 flex items-center justify-center p-4">
-
-    <section 
-      v-if="currentStep === 'selection'" 
-      aria-label="Selección de tipo de solicitud"
-      class="card w-full max-w-4xl h-[500px] bg-primary text-primary-content shadow-2xl relative overflow-hidden flex flex-col items-center justify-center animate-fade-in"
-    >
-      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full" aria-hidden="true"></div>
-      <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-tr-full" aria-hidden="true"></div>
-
-      <div class="z-10 flex flex-col items-center text-center">
-        <button 
-          @click="iniciarSolicitud(null)"
-          class="group flex flex-col items-center mb-8 transition-transform hover:scale-105 focus:outline-none rounded-3xl p-4"
-        >
-          <div class="w-24 h-24 bg-primary-content/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-4 group-hover:bg-primary-content/30 transition-colors shadow-lg border border-primary-content/20">
-            <BaseIcon name="plus" class="h-10 w-10 text-primary-content" />
-          </div>
-          <h2 class="text-3xl font-bold">Nueva Solicitud</h2>
-          <p class="text-primary-content/80 text-sm mt-2">Crea una nueva solicitud de servicio</p>
-        </button>
-
-        <div v-if="areasList.length > 0" class="flex flex-wrap justify-center gap-3 px-8">
-          <button
-            v-for="area in areasList"
-            :key="area.value"
-            @click="iniciarSolicitud(area.value)"
-            class="btn btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary rounded-full btn-sm normal-case font-semibold transition-all"
-          >
-            {{ area.label }}
-          </button>
-        </div>
-        <div v-else class="loading loading-dots text-primary-content"></div>
-      </div>
-    </section>
-
-    <section 
-      v-else 
-      aria-label="Formulario de nueva solicitud"
-      class="card bg-base-100 shadow-xl w-full max-w-2xl animate-slide-up"
-    >
-      <header class="p-6 border-b border-base-200 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-            <BaseIcon name="documentText" class="h-6 w-6" />
-          </div>
-          <h2 class="text-xl font-bold text-base-content">Detalles de Solicitud</h2>
-        </div>
-        <button @click="cancelar" class="btn btn-sm btn-ghost text-base-content/60 hover:text-base-content">
-          Cancelar
-        </button>
-      </header>
-
-      <div class="p-8 bg-white">
-        <FormKit 
-          type="form" 
-          v-model="formData"
-          :actions="false" 
+          :message-class="'text-red-600 font-bold text-center mt-4'"
           @submit="handleSubmit"
         >
           <FormKitSchema :schema="schema" :data="formData" />
 
-          <div class="pt-6 border-t border-base-200 mt-4">
+          <div class="pt-8 flex flex-col gap-3">
             <button 
               type="submit" 
               :disabled="isSubmitting"
-              class="btn btn-primary w-full shadow-lg shadow-primary/20 text-white font-bold"
+              class="btn btn-primary w-full shadow-xl shadow-primary/20 text-white font-bold text-lg h-14"
             >
               <span v-if="isSubmitting" class="loading loading-spinner"></span>
-              <span v-else>Enviar Solicitud</span>
+              <span v-else class="flex items-center gap-2">
+                Enviar Solicitud
+                <BaseIcon name="send" class="size-5" />
+              </span>
+            </button>
+            <button type="button" @click="cancelar" class="btn btn-ghost btn-sm opacity-50">
+              <BaseIcon name="arrowleft" class="size-5" />
+              Volver atrás
             </button>
           </div>
-
         </FormKit>
       </div>
     </section>
-
   </main>
 </template>
 
 <style scoped>
-.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-.animate-slide-up { animation: slideUp 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+.animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 
-/* Estilos para los mensajes de error de FormKit */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { 
+  from { opacity: 0; transform: translateY(30px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+
+:deep(.formkit-outer) { 
+  margin-bottom: 1.5rem; /* Esto asegura un padding constante de 24px entre campos */
+}
+
+:deep(.formkit-label) {
+  padding-left: 2px;
+}
+
 :deep(.formkit-message) { 
-  color: oklch(var(--er)); 
+  font-size: 0.7rem; 
+  margin-top: 0.4rem;
+  margin-left: 0.2rem;
+  font-weight: 800;
+  color: #ef4444; /* Rojo de Tailwind para los errores */
+  text-transform: uppercase;
+}
+
+
+:deep(.formkit-outer) { margin-bottom: 0; }
+:deep(.formkit-message) { 
   font-size: 0.75rem; 
-  margin-top: 0.25rem;
-  font-weight: 600;
+  margin: .5rem;
+  font-weight: 700;
 }
 </style>

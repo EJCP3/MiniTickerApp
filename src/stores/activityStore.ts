@@ -1,34 +1,95 @@
-// src/stores/activityStore.ts
 import { defineStore } from 'pinia';
-import { computed, onUnmounted } from 'vue';
-import { useQuery } from '@pinia/colada';
+import { ref, computed, watch } from 'vue'; // ✅ Añadido watch
+import { useQuery, useQueryCache } from '@pinia/colada';
 import activityService from '@/services/activityService';
+import { toast } from 'vue-sonner';
 
 export const useActivityStore = defineStore('activity', () => {
+  const queryCache = useQueryCache();
+  const initialLoadDone = ref(false); // ✅ Control para evitar toast al cargar la página
+
+  const filterArea = ref<string>('Todas');
+  const filterUser = ref<string>('Todos');
   
-  const { data: activities, status, error, refresh } = useQuery({
-    key: ['activity-mine'],
-    query: async () => {
-      const data = await activityService.getMyActivity();
-      // Verificamos si devuelve un array o un objeto paginado (ajusta según tu backend)
-      return Array.isArray(data) ? data : (data as any).items || [];
-    },
-    staleTime: 1000 * 30, // 30 segundos de caché
+  const apiAreaId = computed(() => filterArea.value === 'Todas' ? undefined : filterArea.value);
+  const apiUserId = computed(() => filterUser.value === 'Todos' ? undefined : filterUser.value);
+
+  const { data: globalActivities, status: globalStatus, refresh: refreshGlobal } = useQuery({
+    key: () => ['activity-global', { area: apiAreaId.value, user: apiUserId.value }],
+    query: () => activityService.getActivityGlobal(apiAreaId.value, apiUserId.value),
+    staleTime: 10000,
   });
 
-  // Auto-refresco cada 30 segundos (Polling) para ver nuevos eventos
-  const intervalId = setInterval(() => {
-    refresh();
-  }, 30000);
+  const { data: myActivities, status: myStatus, refresh: refreshMine } = useQuery({
+    key: ['activity-mine'],
+    query: () => activityService.getMyActivity(),
+    staleTime: 10000,
+  });
 
-  onUnmounted(() => clearInterval(intervalId));
+  // ✅ MONITOR DE NUEVAS ACTIVIDADES
+ watch(globalActivities, (newList, oldList) => {
+    if (!initialLoadDone.value) {
+        if (newList?.length > 0) initialLoadDone.value = true;
+        return;
+    }
 
-  const isLoading = computed(() => status.value === 'pending');
+    if (newList?.length > 0 && oldList?.length > 0) {
+        if (newList[0].id !== oldList[0].id) {
+            toast("Nueva Actividad", {
+                description: newList[0].titulo,
+                duration: 5000
+            });
+        } 
+    }
+}, { deep: true });
+
+  setInterval(() => {
+    refreshGlobal();
+    refreshMine();
+  }, 30000); // Refresca cada 10s
+  const activities = computed(() => Array.isArray(globalActivities.value) ? globalActivities.value : []);
+  const myActivitiesList = computed(() => Array.isArray(myActivities.value) ? myActivities.value : []);
+
+  const stats = computed(() => {
+    const lista = activities.value || [];
+    const total = lista.length;
+
+    const hoy = lista.filter(act => {
+      const f = act.fecha.toLowerCase();
+      return f.includes('min') || f.includes('h') || f.includes('momento');
+    }).length;
+
+    const semana = lista.filter(act => {
+      const f = act.fecha.toLowerCase();
+      if (f.includes('min') || f.includes('h') || f.includes('momento')) return true;
+      if (f.includes('d')) {
+        const dias = parseInt(f.match(/\d+/)?.[0] || '0');
+        return dias < 7;
+      }
+      return false;
+    }).length;
+
+    return { total, hoy, semana };
+  });
+
+  const isLoadingGlobal = computed(() => globalStatus.value === 'pending');
+  const isLoadingMine = computed(() => myStatus.value === 'pending');
+
+  const clearFilters = () => {
+    filterArea.value = 'Todas';
+    filterUser.value = 'Todos';
+  };
 
   return { 
-    activities, 
-    isLoading, 
-    error, 
-    refresh 
+    activities,
+    myActivitiesList,
+    filterArea,
+    filterUser,
+    clearFilters,
+    stats,
+    isLoadingGlobal,
+    isLoadingMine,
+    refreshGlobal,
+    refreshMine
   };
 });

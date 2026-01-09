@@ -1,47 +1,45 @@
 <script setup lang="ts">
 import type { Solicitud } from '@/types/solicitudes'
-import BaseIcon from '@/components/BaseIcon.vue' // Importamos BaseIcon
+import BaseIcon from '@/components/BaseIcon.vue'
 
 defineProps<{
   solicitud: Solicitud
 }>()
 
-// --- HELPERS VISUALES (Específicos de la tarjeta) ---
-const getPriorityBorder = (prioridad: string) => {
-  const map: Record<string, string> = {
-    'Baja': 'border-l-emerald-500',
-    'Media': 'border-l-orange-400',
-    'Alta': 'border-l-red-600',
+// --- PALETA HÍBRIDA: Colores vivos para dark, colores suaves para light ---
+const priorityConfig: Record<string, { border: string, badge: string, dot: string }> = {
+  'Baja': { 
+    border: 'border-l-emerald-500', 
+    badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    dot: 'bg-emerald-500'
+  },
+  'Media': { 
+    border: 'border-l-amber-500', 
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    dot: 'bg-amber-500'
+  },
+  'Alta': { 
+    border: 'border-l-rose-500', 
+    badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    dot: 'bg-rose-500'
   }
-  return map[prioridad] || 'border-l-gray-300'
 }
 
-const getTypeConfig = (tipo: string) => {
-  const map: Record<string, { badgeBg: string, badgeText: string }> = {
-    'TI': { badgeBg: 'bg-purple-100', badgeText: 'text-purple-700' },
-    'Mantenimiento': { badgeBg: 'bg-orange-100', badgeText: 'text-orange-700' },
-    'Transporte': { badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700' },
-    'Compras': { badgeBg: 'bg-teal-100', badgeText: 'text-teal-700' }
+const getPriorityData = (prioridad: string) => {
+  return priorityConfig[prioridad] || { 
+    border: 'border-l-base-300', 
+    badge: 'bg-base-200 text-base-content/70 border-base-300', 
+    dot: 'bg-base-400'
   }
-  return map[tipo] || { badgeBg: 'bg-gray-100', badgeText: 'text-gray-700' }
-}
-
-const getPriorityBadgeClass = (prioridad: string) => {
-  const map: Record<string, string> = {
-    'Baja': 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    'Media': 'bg-orange-50 text-orange-700 border-orange-100',
-    'Alta': 'bg-red-50 text-red-700 border-red-100',
-  }
-  return map[prioridad] || 'bg-gray-50'
 }
 
 const getStatusClass = (estado: string) => {
   const map: Record<string, string> = {
-    'Nueva': 'badge-warning bg-yellow-100 text-yellow-800 border-none',
-    'En Proceso': 'badge-info bg-blue-100 text-blue-800 border-none',
-    'Resuelta': 'badge-success bg-green-100 text-green-800 border-none',
-    'Cerrada': 'bg-gray-200 text-gray-600 border-none',
-    'Rechazada': 'badge-error bg-red-100 text-red-800 border-none'
+    'Nueva': 'badge-ghost border-base-300 text-base-content/80',
+    'En Proceso': 'badge-info text-info-content shadow-sm',
+    'Resuelta': 'badge-success text-success-content shadow-sm',
+    'Cerrada': 'bg-base-300 text-base-content/40 border-none',
+    'Rechazada': 'badge-error text-error-content shadow-sm'
   }
   return map[estado] || 'badge-ghost'
 }
@@ -49,66 +47,62 @@ const getStatusClass = (estado: string) => {
 
 <template>
   <article 
-    class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 border border-base-200 h-full border-l-[6px] cursor-pointer hover:scale-[1.02]"
-    :class="getPriorityBorder(solicitud.prioridad)"
+    class="card bg-base-100 shadow-sm hover:shadow-md transition-all duration-200 border border-base-200 h-full border-l-[6px] cursor-pointer group"
+    :class="getPriorityData(solicitud.prioridad).border"
     @click="$emit('click')"
   >
-    <div class="card-body p-6">
+    <div class="card-body p-5">
       
-      <header class="flex justify-between items-start mb-2">
+      <header class="flex justify-between items-start mb-3">
         <div class="flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide"
-            :class="[getTypeConfig(solicitud.tipo).badgeBg, getTypeConfig(solicitud.tipo).badgeText]"
-          >
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-base-200/50 text-base-content/70 border-base-300">
             {{ solicitud.tipo }}
           </span>
-          <span class="text-xs text-base-content/50 font-mono font-medium">{{ solicitud.id }}</span>
+          <span class="text-[12px] text-base-content font-mono italic">#{{ solicitud.id }}</span>
         </div>
         
-        <span class="px-2 py-0.5 rounded-full text-xs font-semibold border"
-          :class="getPriorityBadgeClass(solicitud.prioridad)"
+        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase"
+          :class="getPriorityData(solicitud.prioridad).badge"
         >
+          <span class="size-1.5 rounded-full" :class="getPriorityData(solicitud.prioridad).dot"></span>
           {{ solicitud.prioridad }}
-        </span>
+        </div>
       </header>
 
       <div class="mb-4">
-        <h3 class="font-bold text-lg text-base-content leading-tight mb-2 hover:text-primary transition-colors cursor-pointer">
+        <h3 class="font-bold text-base text-base-content leading-tight mb-1 group-hover:text-primary transition-colors">
           {{ solicitud.titulo }}
         </h3>
-        <p class="text-sm text-base-content/70 line-clamp-3 leading-relaxed">
+        <p class="text-xs text-base-content/60 line-clamp-2 leading-relaxed">
           {{ solicitud.descripcion }}
         </p>
       </div>
 
-      <footer class="mt-auto space-y-3">
-        <div class="flex justify-between items-end">
-          <div class="space-y-1.5">
-            
-            <div class="flex items-center gap-2 text-xs text-base-content/60 font-medium">
-              <BaseIcon name="user" class="h-4 w-4" />
+      <footer class="mt-auto pt-3 border-t border-base-200/50">
+        <div class="flex justify-between items-center">
+          <div class="flex flex-col gap-0.5">
+            <div class="flex items-center gap-1.5 text-[10px] font-bold text-base-content">
+              <BaseIcon name="user" class="size-3 opacity-50" />
               {{ solicitud.solicitante }}
             </div>
-            
-            <div class="flex items-center gap-2 text-xs text-base-content/60">
-              <BaseIcon name="calendar" class="h-4 w-4" />
-              <time>{{ solicitud.fecha }}</time>
+            <div class="flex items-center gap-1.5 text-[10px] font-bold text-base-content">
+              <BaseIcon name="calendar" class="size-3 opacity-50" />
+              {{ solicitud.fecha }}
             </div>
-
           </div>
           
-          <span class="badge badge-sm font-semibold" :class="getStatusClass(solicitud.estado)">
+          <div class="badge badge-sm font-bold" :class="getStatusClass(solicitud.estado)">
             {{ solicitud.estado }}
-          </span>
+          </div>
         </div>
 
-        <div v-if="solicitud.responsable" class="bg-base-200/60 rounded-lg p-2.5 flex items-center gap-2 mt-3">
-            <span class="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Responsable:</span>
-            <span class="text-xs font-semibold text-base-content/80">{{ solicitud.responsable }}</span>
+        <div v-if="solicitud.responsable" 
+          class="mt-3 flex items-center gap-2 text-[12px] px-2 py-1 rounded bg-base-200/30 text-base-content italic border border-base-200/50"
+        >
+          <span class="font-black uppercase ">Atiende:</span>
+          <span>{{ solicitud.responsable }}</span>
         </div>
-        <div v-else class="h-[38px]" aria-hidden="true"></div>
       </footer>
-
     </div>
   </article>
 </template>

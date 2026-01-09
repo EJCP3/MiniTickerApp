@@ -3,7 +3,7 @@ import BaseIcon from "./BaseIcon.vue"; // Asumiendo que el componente se llama a
 
 // No cambiamos los props, siguen igual
 defineProps({
-  id: String,
+  numero: String,
   type: String,
   priority: String,
   title: String,
@@ -35,7 +35,7 @@ defineEmits(["click"]);
         >
           {{ type }}
         </span>
-        <span class="text-gray-400 text-sm font-medium">{{ id }}</span>
+        <span class="text-gray-400 text-sm font-medium">{{ numero }}</span>
       </div>
       <span
         class="px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full uppercase tracking-wider"

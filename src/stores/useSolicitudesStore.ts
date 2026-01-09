@@ -1,183 +1,233 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useQuery } from '@pinia/colada' 
-import ticketService from '@/services/ticketService'
-import catalogsService from '@/services/catalogoService'
-import type { Solicitud, TabType } from '@/types/solicitudes'
-
-// --- MAPEOS (Frontend String <-> Backend Int) ---
-// Estos objetos traducen lo que selecciona el usuario a lo que entiende C#
+import { defineStore } from "pinia";
+import { ref, computed, watch, onMounted } from "vue";
+import { useQuery } from "@pinia/colada";
+import ticketService from "@/services/ticketService";
+import catalogsService from "@/services/catalogoService";
+import { useAuthStore } from "./authStore";
+import type { Solicitud, TabType } from "@/types/solicitudes";
 
 const EstadoMap: Record<string, number | undefined> = {
-  'todas': undefined,
-  'nueva': 0,      // Enum.Nueva
-  'proceso': 1,    // Enum.EnProceso
-  'resuelta': 2,   // Enum.Resuelta
-  'cerrada': 3,    // Enum.Cerrada
-  'rechazada': 4   // Enum.Rechazada
-}
-
-const PrioridadMap: Record<string, number | undefined> = {
-  'todas': undefined,
-  'Baja': 0,
-  'Media': 1,
-  'Alta': 2
-}
-
-const formatearFecha = (fechaRaw: string) => {
-  if (!fechaRaw) return 'Sin fecha';
-  
-  // 1. Intentamos parsear directo (ISO standard)
-  const fecha = new Date(fechaRaw);
-  
-  // 2. Verificamos si es válida
-  if (!isNaN(fecha.getTime())) {
-    return fecha.toLocaleDateString('es-ES', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
-    });
-  }
-
-  // 3. (Opcional) Si tu backend manda "dd/MM/yyyy", lo parseamos manual
-  // Ej: "15/12/2024 10:00:00" -> split
-  try {
-      const parteFecha = fechaRaw.split(' ')[0]; // Tomamos solo la parte de fecha
-      const [dia, mes, anio] = parteFecha.split('/');
-      // Ojo: mes - 1 porque en JS enero es 0
-      const fechaManual = new Date(Number(anio), Number(mes) - 1, Number(dia));
-      if (!isNaN(fechaManual.getTime())) {
-          return fechaManual.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-      }
-  } catch (e) {
-      console.error("Error parseando fecha manual:", fechaRaw);
-  }
-
-  return 'Fecha inválida'; // Fallback final
+  todas: undefined,
+  nueva: 0,
+  proceso: 1,
+  resuelta: 2,
+  cerrada: 3,
+  rechazada: 4,
 };
 
-export const useSolicitudesStore = defineStore('solicitudes', () => {
-  
-  // --- 1. ESTADO (Filtros Reactivos) ---
-  const searchTerm = ref('')
-  const typeFilter = ref('todos') // Aquí guardamos el AreaId (UUID) o 'todos'
-  const priorityFilter = ref('todas')
-  const activeTab = ref<TabType>('todas')
-  
-  // Lista de áreas para el select (se carga una vez)
-  const areasList = ref<{ label: string; value: string }[]>([])
+const PrioridadMap: Record<string, number | undefined> = {
+  todas: undefined,
+  Baja: 0,
+  Media: 1,
+  Alta: 2,
+};
 
-  // --- 2. ACCIONES ---
-  const fetchAreas = async () => {
-    if (areasList.value.length > 0) return; // Evitar recargar si ya existen
-    try {
-        const areas = await catalogsService.getAreas();
-        areasList.value = areas.map(a => ({ label: a.nombre, value: a.id }));
-    } catch (e) {
-        console.error("Error cargando áreas", e);
-    }
+
+
+
+const formatearFecha = (fechaStr: any) => {
+  if (!fechaStr) return "---";
+  if (typeof fechaStr === "string" && fechaStr.includes("/")) {
+    return fechaStr.split(" ")[0];
   }
+  const fechaObj = new Date(fechaStr);
+  if (!isNaN(fechaObj.getTime())) {
+    return fechaObj.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  return fechaStr;
+};
 
-  // --- 3. QUERY PRINCIPAL (Lista de Tickets) ---
-  // Se ejecuta cada vez que cambian los filtros (activeTab, searchTerm, etc.)
-  const { data: rawData, isLoading, refetch } = useQuery({
-    key: () => ['tickets-list', { 
-        search: searchTerm.value, 
-        area: typeFilter.value, 
+export const useSolicitudesStore = defineStore("solicitudes", () => {
+  const authStore = useAuthStore();
+
+
+  const hasGestorFilter = ref("todos"); // "todos", "con", "sin"
+  const currentPage = ref(1);
+  const pageSize = ref(12); // Ajustado para Grid de 3 columnas
+  const areasList = ref<{ label: string; value: string }[]>([]);
+  const searchTerm = ref("");
+  const typeFilter = ref("todos");
+  const priorityFilter = ref("todas");
+  const activeTab = ref<TabType>("todas");
+
+  const fetchAreas = async () => {
+   try {
+    const areas = await catalogsService.getAreas(false);
+    const user = authStore.user; // Datos frescos del usuario
+
+    areasList.value = areas
+      .filter((a) => user?.rol !== "Gestor" || a.id === user?.areaId)
+      .map((a) => ({
+        label: a.nombre,
+        value: a.id,
+      }));
+  } catch (e) {
+    console.error(e);
+  }
+  };
+
+  const {
+    data: rawData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    key: () => [
+      "tickets-list",
+      {
+        userId: authStore.user?.id,
+        areaId: authStore.user?.areaId,
+        search: searchTerm.value,
+        area: typeFilter.value,
         priority: priorityFilter.value,
-        status: activeTab.value
-    }],
-    query: async () => {
+        status: activeTab.value,
+        gestor: hasGestorFilter.value, // Nueva dependencia
+        page: currentPage.value       // Nueva dependencia
+      },
+    ],
+   query: async () => {
+      const miRol = authStore.user?.rol;
       const params = {
-        Page: 1,
-        PageSize: 50, // Ajusta según necesites
+        Page: currentPage.value,
+        PageSize: pageSize.value,
         TextoBusqueda: searchTerm.value || undefined,
-        AreaId: typeFilter.value !== 'todos' ? typeFilter.value : undefined,
         Prioridad: PrioridadMap[priorityFilter.value],
         Estado: EstadoMap[activeTab.value],
+        AreaId: miRol === "Gestor" ? authStore.user?.areaId : (typeFilter.value !== "todos" ? typeFilter.value : undefined),
+        UsuarioId: miRol === "Solicitante" ? authStore.user?.id : undefined,
+        // Nuevo: Lógica para filtrar por asignación
+        TieneGestor: hasGestorFilter.value === "todos" ? undefined : (hasGestorFilter.value === "con")
       };
       return await ticketService.getAll(params);
     },
-    staleTime: 1000 * 60 * 5, // Cache de 5 minutos
-  })
-
-  // --- 4. QUERY SECUNDARIA (Resumen/Contadores) ---
-  // Se ejecuta en paralelo para llenar los badges de las pestañas
-  const { data: summaryData } = useQuery({
-    key: ['tickets-summary'], 
-    query: () => ticketService.getSummary(),
-    staleTime: 1000 * 60 * 2, // Se refresca cada 2 minutos
-  })
-
-  // --- 5. COMPUTED: Lista Visual (Transformación) ---
-  const filteredSolicitudes = computed<Solicitud[]>(() => {
-    const items = rawData.value?.items || [];
-    
-    // Transformamos el objeto complejo del backend a la tarjeta simple del frontend
-    return items.map((t: any) => ({
-      uuid: t.id,
-      id: t.numero, // Ej: "TI-2026-001"
-      titulo: t.asunto,
-      descripcion: t.descripcion,
-      prioridad: ['Baja', 'Media', 'Alta'][t.prioridad] || 'Media',
-      tipo: t.area?.nombre || 'General', 
-      estado: ['Nueva', 'En Proceso', 'Resuelta', 'Cerrada', 'Rechazada'][t.estado] || 'Nueva',
-     fecha: formatearFecha(t.fechaCreacion),
-      solicitante: t.solicitante?.nombre || 'Desconocido',
-      responsable: t.gestor?.nombre || null
-    }));
   });
 
-  // --- 6. COMPUTED: Contadores (Badges) ---
+ const { data: summaryData, refetch: refetchSummary } = useQuery({
+  key: () => [
+    "tickets-summary", 
+    authStore.user?.id, 
+    authStore.user?.areaId,
+    // ✅ Agregamos estas dependencias para que el conteo se actualice al filtrar
+    searchTerm.value, 
+    typeFilter.value, 
+    priorityFilter.value, 
+    hasGestorFilter.value 
+  ],
+  query: () => {
+    const miRol = authStore.user?.rol;
+    
+    // ✅ Construimos el objeto de parámetros igual que en el listado de tickets
+    const params = {
+      TextoBusqueda: searchTerm.value || undefined,
+      Prioridad: PrioridadMap[priorityFilter.value],
+      AreaId: miRol === "Gestor" ? authStore.user?.areaId : (typeFilter.value !== "todos" ? typeFilter.value : undefined),
+      UsuarioId: miRol === "Solicitante" ? authStore.user?.id : undefined,
+      TieneGestor: hasGestorFilter.value === "todos" ? undefined : (hasGestorFilter.value === "con")
+    };
+
+    return ticketService.getSummary(params);
+  },
+  staleTime: 1000 * 60 * 2,
+});
+
+  const filteredSolicitudes = computed<Solicitud[]>(() => {
+    const items = rawData.value?.items || [];
+
+    return items.map((t: any) => {
+    // Definimos el mapeo explícito
+    const prioridades = ["Baja", "Media", "Alta"];
+    
+    // Verificamos si t.prioridad ya es un string o es el índice numérico
+    const prioridadTexto = typeof t.prioridad === 'number' 
+      ? prioridades[t.prioridad] 
+      : t.prioridad;
+
+    return{
+      uuid: t.id,
+      id: t.numero,
+      titulo: t.asunto,
+      descripcion: t.descripcion,
+      prioridad: prioridadTexto || "Media",
+      tipo: t.area?.nombre || "General",
+      estado: ["Nueva", "En Proceso", "Resuelta", "Cerrada", "Rechazada"][t.estado] || "Nueva",
+      fecha: formatearFecha(t.fechaCreacion),
+      solicitante: t.solicitante?.nombre || "Desconocido",
+      responsable: t.gestor?.nombre || null,
+      };
+    });
+  });
+
+ const totalPages = computed(() => {
+    // CAMBIO AQUÍ: Usamos 'total' porque así viene en tu JSON
+    const totalRegistros = rawData.value?.total || 0; 
+    
+    // Usamos el pageSize que tienes definido (12)
+    return Math.ceil(totalRegistros / pageSize.value) || 1;
+  });
+
+  
+  // Resetear página al cambiar filtros
+  watch([searchTerm, typeFilter, priorityFilter, activeTab, hasGestorFilter], () => {
+    currentPage.value = 1;
+  });
+
+  watch(() => authStore.user?.areaId, (newAreaId, oldAreaId) => {
+if (newAreaId === oldAreaId && areasList.value.length > 0) return;
+console.log("Cambio de área detectado...");
+  // Limpiamos los filtros que dependen del área
+  typeFilter.value = "todos";
+  currentPage.value = 1;
+  
+  // Limpiamos la lista de áreas para que fetchAreas la vuelva a generar con el nuevo permiso
+  areasList.value = [];
+  fetchAreas(); 
+  
+  // Forzamos la actualización de useQuery
+  refetch();
+}, { immediate: true });
+
+
   const counts = computed(() => {
-    // summaryData viene como { "0": 5, "1": 3 ... }
-    const s = summaryData.value || {};
-    
-    // Sumamos todos los valores del diccionario para obtener el total global real
-    const totalGlobal = Object.values(s).reduce((a, b) => a + (b as number), 0);
-    
-    // El total de la lista actual (paginada)
-    const totalLista = rawData.value?.total || 0;
+  // 1. Extraemos los datos reales. Pinia Colada a veces envuelve la respuesta.
+  // Si ves "[Object Object]" en la pantalla, es porque estamos recibiendo la respuesta completa de Axios.
+  const s = summaryData.value?.data || summaryData.value || {};
 
-    return {
-      // Si estamos en la tab "todas", mostramos cuántos hay en la lista filtrada.
-      // Si no, mostramos la suma total del resumen.
-      todas: activeTab.value === 'todas' ? totalLista : totalGlobal,
-
-      // Mapeo: Backend Int (Keys del objeto) -> Frontend String (Keys de este return)
-      nueva:     s['0'] || 0,
-      proceso:   s['1'] || 0,
-      resuelta:  s['2'] || 0,
-      cerrada:   s['3'] || 0,
-      rechazada: s['4'] || 0
-    }
-  })
-
-  // Acción para resetear todo si sales de la pantalla (opcional)
-  const resetFilters = () => {
-      searchTerm.value = ''
-      typeFilter.value = 'todos'
-      priorityFilter.value = 'todas'
-      activeTab.value = 'todas'
-  }
+  // 2. Filtramos solo los valores que son números para el total global
+  const totalGlobal = Object.entries(s)
+    .filter(([key, value]) => !isNaN(Number(key)) && typeof value === 'number')
+    .reduce((a, [_, b]) => a + (b as number), 0);
 
   return {
-    // Estado
-    searchTerm,
-    typeFilter,
-    priorityFilter,
-    activeTab,
-    areasList,
-    
-    // Acciones
-    fetchAreas,
-    resetFilters,
-    refetch,
+    todas: totalGlobal,
+    nueva: s["0"] || 0,
+    proceso: s["1"] || 0,
+    resuelta: s["2"] || 0,
+    cerrada: s["3"] || 0,
+    rechazada: s["4"] || 0,
+  };
+});
 
-    // Datos procesados
-    filteredSolicitudes,
-    isLoading: computed(() => isLoading.value), // Carga inicial fuerte
-    // Carga de fondo (spinner pequeño)
-    counts // Los numeritos mágicos
-  }
-})
+watch([searchTerm, typeFilter, priorityFilter, activeTab, hasGestorFilter], () => {
+  currentPage.value = 1;
+  refetchSummary(); 
+});
+
+  const resetFilters = () => {
+    searchTerm.value = "";
+    typeFilter.value = "todos";
+    priorityFilter.value = "todas";
+    activeTab.value = "todas";
+  };
+
+  return {
+    searchTerm, typeFilter, priorityFilter, activeTab,
+    hasGestorFilter, currentPage, totalPages, // Exportar nuevos
+    areasList, fetchAreas, refetch, filteredSolicitudes,
+    isLoading: computed(() => isLoading.value), counts,
+    resetFilters,
+  
+  };
+});

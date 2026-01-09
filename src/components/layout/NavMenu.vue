@@ -31,11 +31,10 @@ const allMenuItems: MenuItem[] = [
     label: "Solicitudes", 
     route: "/solicitudes", 
     hotkey: "d",
-    // Ejemplo: Digamos que todos pueden ver sus propias solicitudes
   },
   { 
-    label: "Departamentos", 
-    route: "/departamentos", 
+    label: "Área", 
+    route: "/area", 
     hotkey: "f",
     roles: ['Admin', 'SuperAdmin'] // Solo Admins
   },
@@ -43,7 +42,7 @@ const allMenuItems: MenuItem[] = [
     label: "Actividad", 
     route: "/actividad", 
     hotkey: "g",
-    roles: ['Gestor', 'Admin', 'SuperAdmin'] // Gestores y Admins
+    roles: [ 'Admin', 'SuperAdmin'] // Gestores y Admins
   },
   { 
     label: "Usuarios", 

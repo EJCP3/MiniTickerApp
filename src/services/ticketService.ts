@@ -36,7 +36,7 @@ export default {
     return response.data;
   },
 
-   async changeStatus(ticketId: string, estado: number, motivo: string) {
+  async changeStatus(ticketId: string, estado: number, motivo: string) {
     const response = await apiClient.patch(`/api/tickets/${ticketId}/status`, {
       estado: estado,
       motivo: motivo,
@@ -45,7 +45,6 @@ export default {
   },
 
   async update(id: string, formData: FormData) {
-    
     const { data } = await apiClient.put(`/api/tickets/${id}`, formData);
     return data;
   },
@@ -58,14 +57,13 @@ export default {
   async getAll(filter: TicketFilter): Promise<PagedResult<Ticket>> {
     // Axios serializa automáticamente el objeto params a query string
     // Ej: /api/tickets?Page=1&PageSize=10&Estado=1
-    const response = await apiClient.get<PagedResult<Ticket>>("/api/tickets", { 
-      params: filter 
+    const response = await apiClient.get<PagedResult<Ticket>>("/api/tickets", {
+      params: filter,
     });
     return response.data;
   },
-  async getSummary() {
-    // El backend devuelve Dictionary<int, int>, que en JS es un objeto { "0": 5, "1": 3 }
-    const { data } = await apiClient.get<Record<string, number>>("/api/tickets/summary");
-    return data;
-  }
+  getSummary: async (params: any) => {
+    // Ahora enviamos el objeto completo de filtros a la URL /api/tickets/summary
+    return await apiClient.get("/api/tickets/summary", { params });
+  },
 };

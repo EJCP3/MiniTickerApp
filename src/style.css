@@ -24,3 +24,8 @@
 body{
   @apply h-full;
 }
+
+.formkit-file-list, 
+.formkit-file-item {
+  display: none !important;
+}

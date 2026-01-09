@@ -65,6 +65,12 @@ const avatarUrl = computed(() => {
             {{ user.rol }}
           </span>
         </div>
+
+        <div v-if="user.areaNombre" class="mt-2">
+          <span class="badge badge-warning badge-lg uppercase font-semibold shadow-sm">
+            {{ user.areaNombre }}
+          </span>
+        </div>
       </header>
 
       <div class="divider text-base-content/50 text-sm">Información de Contacto</div>

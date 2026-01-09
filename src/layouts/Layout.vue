@@ -2,11 +2,13 @@
 import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/authStore";
+import 'vue-sonner/style.css'
 
 // Componentes
 import TheNavbar from "@/components/layout/TheNavbar.vue";
 import MenuKeys from "@/components/MenuKeys.vue";
 import PerfilModal from "@/components/PerfilModal.vue";
+import { Toaster } from "vue-sonner";
 
 // --- 1. Lógica de Estado Global ---
 const authStore = useAuthStore();
@@ -35,12 +37,13 @@ const handleOpenCommands = () => {
       @open-profile="handleOpenPerfil"
       @open-commands="handleOpenCommands"
     />
-
+    
     <main class="p-4 md:p-6 w-full max-w-7xl mx-auto ">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
         </transition>
+        <Toaster position="top-center" richColors closeButton />
       </router-view>
     </main>
 

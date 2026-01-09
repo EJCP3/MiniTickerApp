@@ -64,22 +64,17 @@ const handleSubmit = async (data: any) => {
   }
 };
 </script>
-
 <template>
   <div class="animate-fade-in pt-1 pb-4">
     <div class="flex items-center justify-between mb-6 px-1">
-        <div class="flex flex-col">
-            <h3 class="text-lg font-bold text-base-content flex items-center gap-2">
+        <div class="flex flex-col ">
+            <h3 class="text-lg font-bold text-base-content flex items-center justify-center gap-2 mt-4">
                 <div class="p-1.5 bg-primary/10 rounded-lg text-primary">
-                    <BaseIcon name="edit" class="h-5 w-5"/>
+                    <BaseIcon name="edit" class="size-7"/>
                 </div>
                 Editar Solicitud
             </h3>
-            <span class="text-xs text-gray-400 pl-9">Actualiza los detalles de tu ticket</span>
         </div>
-        <button @click="emit('cancel')" class="btn btn-sm btn-ghost text-gray-400 hover:text-error">
-            <BaseIcon name="close" class="h-5 w-5"/>
-        </button>
     </div>
 
     <div class="bg-base-100 p-1">
@@ -97,8 +92,8 @@ const handleSubmit = async (data: any) => {
                     label="Asunto"
                     validation="required|length:5,100"
                     outer-class="formkit-outer"
-                    input-class="input input-bordered w-full focus:input-primary font-bold text-gray-700"
-                    label-class="label-text font-bold text-xs uppercase text-gray-400 mb-1 block"
+                    input-class="input input-bordered w-full focus:input-primary font-bold text-base-content"
+                    label-class="label-text font-bold text-xs uppercase text-base-content/50 mb-1 block"
                 />
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -108,8 +103,8 @@ const handleSubmit = async (data: any) => {
                         label="Prioridad"
                         :options="opcionesPrioridad"
                         outer-class="formkit-outer"
-                        input-class="select select-bordered w-full focus:select-primary font-medium"
-                        label-class="label-text font-bold text-xs uppercase text-gray-400 mb-1 block"
+                        input-class="select select-bordered w-full focus:select-primary font-medium text-base-content"
+                        label-class="label-text font-bold text-xs uppercase text-base-content/50 mb-1 block"
                     />
 
                     <FormKit
@@ -118,8 +113,8 @@ const handleSubmit = async (data: any) => {
                         label="Adjuntar Archivo Nuevo"
                         accept=".pdf,.jpg,.png,.doc,.docx"
                         outer-class="formkit-outer"
-                        input-class="file-input file-input-bordered file-input-primary w-full text-sm"
-                        label-class="label-text font-bold text-xs uppercase text-gray-400 mb-1 block"
+                        input-class="file-input file-input-bordered file-input-primary w-full text-sm text-base-content"
+                        label-class="label-text font-bold text-xs uppercase text-base-content/50 mb-1 block"
                     />
                 </div>
 
@@ -129,22 +124,22 @@ const handleSubmit = async (data: any) => {
                     label="Descripción Detallada"
                     validation="required|length:10"
                     outer-class="formkit-outer"
-                    input-class="textarea textarea-bordered w-full h-32 text-base leading-relaxed focus:textarea-primary"
-                    label-class="label-text font-bold text-xs uppercase text-gray-400 mb-1 block"
+                    input-class="textarea textarea-bordered w-full h-32 text-base leading-relaxed focus:textarea-primary text-base-content"
+                    label-class="label-text font-bold text-xs uppercase text-base-content/50 mb-1 block"
                 />
 
                 <div class="flex gap-3 pt-4 border-t border-base-200 mt-2">
                     <button 
                         type="button"
                         @click="emit('cancel')" 
-                        class="btn btn-ghost flex-1 text-gray-500 hover:bg-base-200"
+                        class="btn btn-ghost flex-1 text-base-content/60 hover:bg-base-200"
                     >
-                        Cancelar
+                        Cerrar
                     </button>
                     
                     <button 
                         type="submit"
-                        class="btn btn-primary flex-1 text-white shadow-lg shadow-primary/30"
+                        class="btn btn-primary flex-1 text-white shadow-lg text-center"
                         :disabled="store.isActionLoading || state.loading"
                     >
                         <span v-if="store.isActionLoading" class="loading loading-spinner"></span>
@@ -159,7 +154,6 @@ const handleSubmit = async (data: any) => {
     </div>
   </div>
 </template>
-
 <style scoped>
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }

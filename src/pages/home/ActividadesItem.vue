@@ -3,41 +3,28 @@ import { computed } from 'vue';
 import BaseIcon from '@/components/BaseIcon.vue';
 import type { ActivityItem } from '@/types/activity';
 import type { IconName } from '@/utils/icons';
+import { useActivityUI } from '@/composables/useActivityUI';
 
 const props = defineProps<{
   actividad: ActivityItem;
 }>();
 
+const { getActivityConfig } = useActivityUI();
+
 // Emitimos un evento cuando hacen click
 defineEmits(['click']);
 
 // Lógica visual (Colores e Iconos)
-const config = computed(() => {
-  const tipo = props.actividad.tipo; // Asegúrate que tu tipo ActivityItem tenga 'tipo'
-  switch (tipo) {
-    case 'Creado': 
-      return { icon: 'plus', color: 'bg-emerald-500/20 text-emerald-500', border: 'border-emerald-500/30' };
-    case 'EstadoCambiado': 
-      return { icon: 'refresh', color: 'bg-blue-500/20 text-blue-500', border: 'border-blue-500/30' };
-    case 'Asignado': 
-      return { icon: 'userCheck', color: 'bg-purple-500/20 text-purple-500', border: 'border-purple-500/30' };
-    case 'Comentario': 
-      return { icon: 'chat', color: 'bg-amber-500/20 text-amber-500', border: 'border-amber-500/30' };
-    case 'Cierre':
-      return { icon: 'checkCircle', color: 'bg-green-500/20 text-green-500', border: 'border-green-500/30' };
-    default: 
-      return { icon: 'bell', color: 'bg-gray-500/20 text-gray-400', border: 'border-gray-500/30' };
-  }
-});
+
 </script>
 
 <template>
   <li class="group relative pl-12 pb-8 last:pb-0">
     <div 
       class="absolute left-0 top-0 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-transform group-hover:scale-110 z-10 bg-base-100"
-      :class="[config.color, config.border]"
+      :class="[getActivityConfig(actividad.tipo).circleClass]"
     >
-      <BaseIcon :name="config.icon as IconName" class="size-5" />
+      <BaseIcon :name="getActivityConfig(actividad.tipo).iconName as IconName" class="size-5" />
     </div>
 
     <article 

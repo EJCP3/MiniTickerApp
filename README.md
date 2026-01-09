@@ -25,7 +25,7 @@ Los usuarios del sistema pueden:
 
 - **Live URL:** en proceso...
 
-### Built with
+### Construido con
 
 El proyecto integra un ecosistema de librerías modernas:
 

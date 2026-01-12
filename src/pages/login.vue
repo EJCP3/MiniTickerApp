@@ -11,13 +11,14 @@ const credentials = ref({
   password: "",
 });
 
-const handleLogin = async (data) => {
-  console.log(credentials.value);
-
+const handleLogin = async () => {
   const success = await authStore.login(credentials.value);
-
+  
   if (success) {
-    router.push("/");
+  
+    if (!authStore.debeCambiarPassword) {
+       router.push('/'); 
+    }
   }
 };
 </script>
@@ -70,13 +71,13 @@ const handleLogin = async (data) => {
             Inicia sesión
           </h2>
 
-          <FormKit type="form" :actions="false" @submit="handleLogin">
+          <FormKit type="form" :actions="false"  @submit="handleLogin">
             <FormKit
               v-model="credentials.email"
               type="email"
               name="email"
               label="Email"
-              placeholder="johnsondoe@nomail.com"
+              placeholder="usuarios@miniticker.com"
               validation="required|email"
               :classes="{
                 outer: 'mb-5',

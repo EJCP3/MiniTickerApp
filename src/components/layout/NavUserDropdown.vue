@@ -116,7 +116,7 @@ const displayAvatar = computed(() => props.user?.fotoPerfilUrl || `https://ui-av
       <div class="divider my-0"></div>
 
       <li>
-        <button @click="handleLogout" class="text-error font-medium hover:bg-error/10">
+        <button @click.prevent="handleLogout" class="text-error font-medium hover:bg-error/10">
           Cerrar Sesión
         </button>
       </li>

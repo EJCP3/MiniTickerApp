@@ -8,6 +8,7 @@ export interface User {
   fechaCreacion: string;
   areaId?: string;
   areaNombre?: string;
+  debeCambiarPassword?: boolean;
 }
 
 export type RolUsuario = "Solicitante" | "Admin" | "Gestor" | "SuperAdmin";

@@ -13,6 +13,7 @@ import Actividad from "@/pages/actividad/Actividad.vue";
 import Usuarios from "@/pages/usuarios/Usuarios.vue";
 import Layout from "@/layouts/Layout.vue";
 import { useAuthStore } from "@/stores/authStore";
+import InitialSetup from "@/pages/InitialSetup.vue"; // 👈 Tu vista nueva
 
 type Role = "Solicitante" | "Admin" | "Gestor" | "SuperAdmin";
 
@@ -31,7 +32,13 @@ const routes: RouteRecordRaw[] = [
     name: "Login",
     meta: { requiresGuest: true },
   },
-
+  // 👇 Excelente decisión: Fuera del Layout para que no vea el menú
+  {
+    path: '/initial',
+    name: 'InitialSetup',
+    component: InitialSetup,
+    meta: { requiresAuth: true } 
+  },
   {
     path: "/",
     component: Layout,
@@ -49,9 +56,7 @@ const routes: RouteRecordRaw[] = [
         path: "/solicitudes",
         component: Solicitudes,
         name: "Solicitudes",
-        meta: {
-          allowedRoles: ["Solicitante", "Gestor", "Admin", "SuperAdmin"],
-        },
+        meta: { allowedRoles: ["Solicitante", "Gestor", "Admin", "SuperAdmin"] },
       },
       {
         path: "/area",
@@ -72,8 +77,6 @@ const routes: RouteRecordRaw[] = [
         meta: { allowedRoles: ["SuperAdmin"] },
       },
     ],
-
-    
   },
   { 
     path: '/:pathMatch(.*)*', 
@@ -86,21 +89,41 @@ const router = createRouter({
   routes,
 });
 
-
+// 👇 LÓGICA DE GUARDIÁN CORREGIDA
 router.beforeEach(async(to, from, next) => {
   const authStore = useAuthStore();
-
   const isAuthenticated = !!authStore.token;
   const userRole = authStore.user?.rol;
 
+  // 1. SI REQUIERE AUTH Y NO ESTÁ LOGUEADO -> LOGIN
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next({ name: "Login" });
   }
 
+  // 2. SI ES GUEST (Login) Y ESTÁ LOGUEADO -> HOME
   if (to.meta.requiresGuest && isAuthenticated) {
-    return next({ path: "/" });
+     return next({ path: "/" });
   }
 
+  // -----------------------------------------------------
+  // 🔒 LÓGICA DE BLOQUEO (INITIAL SETUP)
+  // -----------------------------------------------------
+  
+  // A. Si DEBE cambiar pass y trata de ir a cualquier lado que NO sea InitialSetup
+  if (isAuthenticated && authStore.debeCambiarPassword) {
+    if (to.name !== 'InitialSetup') {
+      return next({ name: 'InitialSetup' }); // 🛑 ¡Quieto ahí! Vete a configurar
+    }
+  }
+
+  // B. Si YA configuró (NO debe cambiar) y trata de volver a entrar a InitialSetup manualmente
+  if (isAuthenticated && !authStore.debeCambiarPassword && to.name === 'InitialSetup') {
+    return next({ path: "/" }); // 🛑 Ya terminaste, vete al Home
+  }
+
+  // -----------------------------------------------------
+
+  // 4. ROLES
   if (to.meta.allowedRoles) {
     if (userRole && !to.meta.allowedRoles.includes(userRole as any)) {
       if (to.path !== "/") {
@@ -110,8 +133,8 @@ router.beforeEach(async(to, from, next) => {
       }
     }
   }
- 
-  // 4. Todo correcto
+
+  // 5. Pase usted
   next();
 });
 

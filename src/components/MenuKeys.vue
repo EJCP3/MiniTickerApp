@@ -71,10 +71,20 @@ const allActions = ref<NinjaAction[]>([
       router.push("/actividad");
     },
   },
+   {
+    id: "report",
+    title: "Ver Report",
+    hotkey: "ctrl+r",
+    roles: ["Admin", "SuperAdmin"],
+    icon: icons.reportSearch,
+    handler: () => {
+      router.push("/report");
+    },
+  },
  {
     id: "usuarios",
     title: "Gestionar Usuarios",
-    hotkey: "ctrl+h",
+    hotkey: "ctrl+e",
     roles: ["SuperAdmin"],
     icon: icons.user,
     handler: () => {

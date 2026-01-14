@@ -45,9 +45,15 @@ const allMenuItems: MenuItem[] = [
     roles: [ 'Admin', 'SuperAdmin'] // Gestores y Admins
   },
   { 
+    label: "Report", 
+    route: "/report", 
+    hotkey: "r",
+    roles: [ 'Admin', 'SuperAdmin'] // Gestores y Admins
+  },
+  { 
     label: "Usuarios", 
     route: "/usuarios", 
-    hotkey: "h",
+    hotkey: "t",
     roles: ['SuperAdmin'] // Solo Admins
   },
 ];

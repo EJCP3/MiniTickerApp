@@ -4,7 +4,7 @@ import {
   type RouteRecordRaw,
 } from "vue-router";
 
-import Login from "@/pages/login.vue";
+import Login from "@/pages/login/login.vue";
 import Home from "@/pages/home/Home.vue";
 import CrearSolicitud from "@/pages/crearSolicitud/CrearSolicitud.vue";
 import Solicitudes from "@/pages/solicitudes/Solicitudes.vue";
@@ -13,7 +13,9 @@ import Actividad from "@/pages/actividad/Actividad.vue";
 import Usuarios from "@/pages/usuarios/Usuarios.vue";
 import Layout from "@/layouts/Layout.vue";
 import { useAuthStore } from "@/stores/authStore";
-import InitialSetup from "@/pages/InitialSetup.vue"; // 👈 Tu vista nueva
+import InitialSetup from "@/pages/login/InitialSetup.vue"; 
+import { report } from "process";
+import Report from "@/pages/report/Report.vue";
 
 type Role = "Solicitante" | "Admin" | "Gestor" | "SuperAdmin";
 
@@ -27,14 +29,14 @@ declare module "vue-router" {
 
 const routes: RouteRecordRaw[] = [
   {
-    path: "/login",
+    path: "/login/login",
     component: Login,
     name: "Login",
     meta: { requiresGuest: true },
   },
   // 👇 Excelente decisión: Fuera del Layout para que no vea el menú
   {
-    path: '/initial',
+    path: '/login/initial',
     name: 'InitialSetup',
     component: InitialSetup,
     meta: { requiresAuth: true } 
@@ -71,11 +73,18 @@ const routes: RouteRecordRaw[] = [
         meta: { allowedRoles: ["Admin", "SuperAdmin"] },
       },
       {
+        path: "/report",
+        component: Report,
+        name: "report",
+        meta: { allowedRoles: ["Admin","SuperAdmin"] },
+      },
+      {
         path: "/usuarios",
         component: Usuarios,
         name: "Usuarios",
         meta: { allowedRoles: ["SuperAdmin"] },
       },
+       
     ],
   },
   { 

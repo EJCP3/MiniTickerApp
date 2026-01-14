@@ -105,7 +105,8 @@ const handleLogin = async () => {
                 message: 'text-red-500 text-xs mt-1',
               }"
             />
-
+            <a href="#" class="mb-8 text-sm text-primary hover:underline"
+              >¿Olvidaste tu contraseña?</a >
             <button
               type="submit"
               class="w-full rounded-md bg-gray-900 py-3 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"

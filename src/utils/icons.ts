@@ -91,7 +91,7 @@ export const icons = {
   file: createSvgIcon("M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z M13 2v7h7"),
   filePlus: createSvgIcon("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M12 18v-6 M9 15h6"),
   fileMinus: createSvgIcon("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M9 15h6"),
-  
+  reportSearch: createSvgIcon("M8 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h5.697 M18 12v-5a2 2 0 0 0 -2 -2h-2 M8 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2 M8 11h4 M8 15h3 M14 17.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M18.5 19.5l2.5 2.5"),
 };
 
 export type IconName = keyof typeof icons;

@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import BaseIcon from "../BaseIcon.vue";
@@ -8,7 +7,6 @@ import { useAuthStore } from "@/stores/authStore";
 const store = useTicketStore();
 const authStore = useAuthStore();
 
-// ✅ Mapeo de pesos para control de flujo unidireccional
 const EstadoTicketEnum = {
   Nueva: 0, 
   EnProceso: 1,
@@ -19,28 +17,23 @@ const EstadoTicketEnum = {
 
 const nuevoEstado = ref<number | string>(""); 
 const nuevoComentario = ref("");
-const motivoRechazo = ref(""); 
+const motivoRechazo = ref(""); // Se usa esta variable para enviar el motivo al store
 
 const isSubmitting = computed(() => store.isActionLoading);
 const esAdmin = computed(() => authStore.user?.rol === 'Admin' || authStore.user?.rol === 'SuperAdmin');
 
-// ✅ Obtener el peso numérico del estado actual del ticket
 const pesoEstadoActual = computed(() => {
   const estado = store.currentTicket?.estado;
   if (typeof estado === 'number') return estado;
   
-  // Mapeo por si el backend envía strings
   const mapa: Record<string, number> = {
     'Nueva': 0, 'EnProceso': 1, 'Resuelta': 2, 'Cerrada': 3, 'Rechazada': 4
   };
   return mapa[estado] ?? 0;
 });
 
-// ✅ Filtrar opciones para evitar retrocesos
 const opcionesDisponibles = computed(() => {
   const actual = pesoEstadoActual.value;
-  
-  // Si el ticket ya está Cerrado (3) o Rechazado (4), no hay más cambios posibles
   if (actual >= 3) return [];
 
   const todas = [
@@ -50,7 +43,6 @@ const opcionesDisponibles = computed(() => {
     { label: 'Cerrada ', value: EstadoTicketEnum.Cerrada, adminOnly: true },
   ];
 
-  // Solo retornar estados con peso mayor al actual
   return todas.filter(opt => {
     const cumpleFlujo = opt.value > actual;
     const cumpleRol = opt.adminOnly ? esAdmin.value : true;
@@ -58,19 +50,27 @@ const opcionesDisponibles = computed(() => {
   });
 });
 
-const requiereMotivo = computed(() => {
+// ✅ CAMBIO 1: Determina si se debe MOSTRAR el input (siempre que haya un estado seleccionado)
+const mostrarInputMotivo = computed(() => {
+  return nuevoEstado.value !== "";
+});
+
+// ✅ CAMBIO 2: Determina si el motivo es OBLIGATORIO (solo para Rechazada)
+const esMotivoObligatorio = computed(() => {
   return Number(nuevoEstado.value) === EstadoTicketEnum.Rechazada;
 });
 
 watch(() => store.currentTicket, (ticket) => {
-    nuevoEstado.value = ""; // Resetear al cambiar de ticket
+    nuevoEstado.value = ""; 
     motivoRechazo.value = "";
 }, { immediate: true });
 
 const guardarEstado = async () => {
   if (nuevoEstado.value === "") return;
-  if (requiereMotivo.value && !motivoRechazo.value.trim()) {
-      alert("Debes indicar un motivo para rechazar.");
+
+  // ✅ CAMBIO 3: Validación solo si es obligatorio
+  if (esMotivoObligatorio.value && !motivoRechazo.value.trim()) {
+      alert("Debes indicar un motivo para el rechazo.");
       return;
   }
   
@@ -121,19 +121,20 @@ const publicarComentario = async () => {
           </button>
         </div>
 
-        <div v-if="requiereMotivo" class="animate-fade-in-up">
+        <div v-if="mostrarInputMotivo" class="animate-fade-in-up">
             <input 
                 v-model="motivoRechazo"
                 type="text" 
-                class="input input-bordered input-error w-full" 
-                placeholder="Especifique el motivo del rechazo (Obligatorio)..." 
+                class="input input-bordered w-full"
+                :class="{ 'input-error': esMotivoObligatorio }"
+                :placeholder="esMotivoObligatorio ? 'Especifique el motivo del rechazo (Obligatorio)...' : 'Nota sobre el cambio de estado (Opcional)...'" 
             />
         </div>
       </div>
     </div>
 
     <div v-else-if="pesoEstadoActual >= 3" class="alert alert-info shadow-sm py-2">
-      <BaseIcon name="info" class="h-4 w-4" />
+      <BaseIcon name="infoCircle" class="h-4 w-4" />
       <span class="text-xs">Este ticket se encuentra en un estado finalizado y no permite más cambios de estado.</span>
     </div>
 

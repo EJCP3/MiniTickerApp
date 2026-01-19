@@ -31,7 +31,8 @@ export interface Ticket {
   prioridad: string;
   fechaCreacion: string;
   fechaActualizacion?: string;
-  
+  fechaVencimiento?: string;
+  archivoAdjuntoUrl?: string | null;
   // Objetos anidados (NO STRINGS)
   area?: AreaDto;
   tipoSolicitud?: AreaDto;

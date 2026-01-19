@@ -13,6 +13,7 @@ const EstadoMap: Record<string, number | undefined> = {
   resuelta: 2,
   cerrada: 3,
   rechazada: 4,
+  vencida: 5,
 };
 
 const PrioridadMap: Record<string, number | undefined> = {
@@ -152,8 +153,9 @@ export const useSolicitudesStore = defineStore("solicitudes", () => {
       descripcion: t.descripcion,
       prioridad: prioridadTexto || "Media",
       tipo: t.area?.nombre || "General",
-      estado: ["Nueva", "En Proceso", "Resuelta", "Cerrada", "Rechazada"][t.estado] || "Nueva",
+      estado: ["Nueva", "En Proceso", "Resuelta", "Cerrada", "Rechazada","Vencida"][t.estado] || "Nueva",
       fecha: formatearFecha(t.fechaCreacion),
+      fechaVencimiento:t.fechaVencimiento,
       solicitante: t.solicitante?.nombre || "Desconocido",
       responsable: t.gestor?.nombre || null,
       };
@@ -207,6 +209,7 @@ console.log("Cambio de área detectado...");
     resuelta: s["2"] || 0,
     cerrada: s["3"] || 0,
     rechazada: s["4"] || 0,
+    vencida: s["5"] || 0,
   };
 });
 

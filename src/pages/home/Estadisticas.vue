@@ -58,6 +58,12 @@ const estadisticas = computed(() => [
     iconName: "xCircle",
     colorIcono: "text-error",
     },
+    {
+    titulo: "Vencida",
+    cantidad: counts.value.vencida,
+    iconName: "xCircle",
+    colorIcono: "text-error",
+    },
 ]);
 </script>
 

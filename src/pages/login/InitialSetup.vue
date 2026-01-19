@@ -25,6 +25,10 @@ const passwordRequirements = computed(() => [
   },
 ]);
 
+const esPrimeraVez = computed(() => {
+  return authStore.user?.debeCambiarPassword && !authStore.user?.fotoPerfilUrl;
+});
+
 // Verifica si todos los requisitos se cumplen
 const isPasswordSecure = computed(() =>
   passwordRequirements.value.every((r) => r.met)
@@ -77,20 +81,18 @@ const handleSubmit = async () => {
     >
       <div class="card-body text-center">
         <header>
-          <h1
-            id="setup-title"
-            class="text-3xl font-extrabold mb-2 text-base-content"
-          >
-            ¡Bienvenido!
-          </h1>
-          <p class="text-base-content/70 mb-8 text-sm">
-             Configure tu nueva
-            contraseña y personaliza tu perfil.
-          </p>
+         <h2 class="card-title text-2xl justify-center mb-6">
+        {{ esPrimeraVez ? 'Bienvenido a MiniTicker' : 'Actualizar Contraseña' }}
+      </h2>
+         <p class="text-sm text-center opacity-70 mb-4">
+        {{ esPrimeraVez 
+           ? 'Como es tu primera vez, configura tu contraseña y sube una foto.' 
+           : 'Por seguridad, debes establecer una nueva contraseña.' }}
+      </p>
         </header>
 
         <form @submit.prevent="handleSubmit" class="text-left space-y-5">
-          <div class="flex justify-center mb-2">
+          <div v-if="esPrimeraVez" class="flex justify-center mb-2">
             <div class="avatar placeholder relative group cursor-pointer">
               <div
                 class="w-28 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden bg-base-300 transition-transform hover:scale-105"
@@ -115,7 +117,7 @@ const handleSubmit = async () => {
               />
             </div>
           </div>
-          <p class="text-center text-xs text-gray-400 mb-4">
+          <p v-if="esPrimeraVez" class="text-center text-xs text-gray-400 mb-4">
             Haz clic en el círculo para subir una foto (Opcional)
           </p>
 

@@ -36,21 +36,7 @@ const closeModal = () => {
   showModal.value = false;
 };
 
-const formatearFechaVisual = (fechaStr) => {
-  if (!fechaStr) return "---";
-  if (typeof fechaStr === "string" && fechaStr.includes("/")) {
-    return fechaStr.split(" ")[0];
-  }
-  const fechaObj = new Date(fechaStr);
-  if (!isNaN(fechaObj.getTime())) {
-    return fechaObj.toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }
-  return fechaStr;
-};
+
 
 const ultimosTresTickets = computed(() => {
   const listaOriginal = tickets.value || [];
@@ -77,7 +63,7 @@ const ultimosTresTickets = computed(() => {
     title: ticket.asunto,
     description: ticket.descripcion,
     user: ticket.solicitante?.nombre || "Usuario",
-    date: formatearFechaVisual(ticket.fechaCreacion),
+    date: ticket.fechaCreacion,
     status: ticket.estado,
     responsible: ticket.gestor?.nombre || "Sin asignar",
     ticketId: ticket.id,
@@ -85,6 +71,7 @@ const ultimosTresTickets = computed(() => {
     mensaje: ticket.descripcion,
     usuario: ticket.solicitante?.nombre || "Usuario",
     fecha: ticket.fechaCreacion,
+    fechaVencimiento: ticket.fechaVencimiento,
   }));
 });
 

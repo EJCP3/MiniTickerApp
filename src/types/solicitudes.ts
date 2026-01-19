@@ -49,7 +49,7 @@ export interface Ticket {
   estado: EstadoTicket | string; // Igual aquí
   fechaCreacion: string; // ISO String
   fechaActualizacion?: string;
-  
+  fechaVencimiento?: string;
   // Relaciones
   area?: Area;           // Puede venir el objeto completo o null
   areaId: string;
@@ -80,7 +80,8 @@ export interface Solicitud {
   prioridad: string;   // Ya traducido a texto: "Alta", "Media"
   tipo: string;        // Nombre del área: "TI", "Mantenimiento"
   estado: string;      // Ya traducido: "Nueva", "En Proceso"
-  fecha: string;       // Formato local: "05/01/2026"
+  fecha: string; 
+  fechaVencimiento?: string; // Formato local: "05/01/2026 03:35 p. m."
   solicitante: string; // Nombre
   responsable: string | null; // Nombre
 }
@@ -106,7 +107,7 @@ export interface Comentario {
 
 // --- FILTROS Y PAGINACIÓN ---
 
-export type TabType = 'todas' | 'nueva' | 'proceso' | 'resuelta' | 'cerrada' | 'rechazada';
+export type TabType = 'todas' | 'nueva' | 'proceso' | 'resuelta' | 'cerrada' | 'rechazada' | 'vencida';
 
 export interface TicketFilter {
   Page: number;

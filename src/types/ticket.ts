@@ -7,5 +7,5 @@ export interface Ticket {
   estado: 'Nueva' | 'EnProceso' | 'Resuelta' | 'Cerrada' | 'Rechazada'; 
   prioridad: string;
   fechaCreacion: string;
-
+  fechaVencimiento?: string;
 }

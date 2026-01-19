@@ -54,42 +54,40 @@ const statsConfig = computed(() => [
   },
   {
     label: "Activos",
-    value:  stats.value.activos,
+    value: stats.value.activos,
     icon: "checkCircle",
     colorClass: "bg-emerald-500/10 text-emerald-500",
     borderClass: "border-success/20",
   },
   {
     label: "Inactivos",
-    value:  stats.value.inactivos,
+    value: stats.value.inactivos,
     icon: "userX",
     colorClass: "bg-rose-500/10 text-rose-500",
     borderClass: "border-error/20",
   },
   {
     label: "Solicitantes",
-    value:  stats.value.solicitantes,
+    value: stats.value.solicitantes,
     icon: "user",
     colorClass: "bg-blue-500/10 text-blue-500",
     borderClass: "border-info/20",
   },
   {
     label: "Gestores",
-    value:  stats.value.gestores,
+    value: stats.value.gestores,
     icon: "userSettings",
     colorClass: "bg-primary/10 text-primary",
     borderClass: "border-primary/20",
   },
   {
     label: "Admins",
-    value:  stats.value.admins,
+    value: stats.value.admins,
     icon: "userShield",
     colorClass: "bg-secondary/10 text-secondary",
     borderClass: "border-secondary/20",
   },
 ]);
-
-
 </script>
 
 <template>
@@ -107,14 +105,25 @@ const statsConfig = computed(() => [
           </p>
         </div>
 
-        <button
-          @click="openCreate"
-          class="btn btn-primary shadow-lg shadow-primary/20 gap-2 font-bold text-white"
-          aria-label="Crear nuevo usuario"
-        >
-          <BaseIcon name="plus" class="h-5 w-5" />
-          Nuevo Usuario
-        </button>
+        <div class="flex gap-3">
+          <button
+            @click="openCreate"
+            class="btn btn-primary shadow-lg shadow-primary/20 gap-2 font-bold text-white"
+            aria-label="Crear nuevo usuario"
+          >
+            <BaseIcon name="plus" class="h-5 w-5" />
+            Nuevo Usuario
+          </button>
+
+          <RouterLink
+            to="/usuarios/reset"
+            class="btn btn-primary shadow-lg shadow-primary/20 gap-2 font-bold text-white"
+            aria-label="Crear nuevo usuario"
+          >
+            <BaseIcon name="user" class="h-5 w-5" />
+            Solicitud de password reset
+          </RouterLink>
+        </div>
       </header>
 
       <section
@@ -193,7 +202,6 @@ const statsConfig = computed(() => [
         </select>
       </search>
 
-  
       <section class="relative">
         <transition name="fade" mode="out-in">
           <div

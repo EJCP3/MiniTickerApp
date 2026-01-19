@@ -212,7 +212,7 @@ const descargarExcel = () => {
         class="flex w-full flex-wrap gap-2 mb-8"
       >
         <button
-          v-for="tab in (['todas', 'nueva', 'proceso', 'resuelta', 'cerrada', 'rechazada'] as const)"
+          v-for="tab in (['todas', 'nueva', 'proceso', 'resuelta', 'cerrada', 'rechazada', 'vencida'] as const)"
           :key="tab"
           @click="activeTab = tab"
           class="flex-1 btn btn-sm rounded-full font-medium transition-all duration-200 gap-2 border capitalize"

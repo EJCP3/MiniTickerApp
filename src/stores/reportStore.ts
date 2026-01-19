@@ -24,7 +24,6 @@ export const useDashboardStore = defineStore("dashboard", () => {
     staleTime: 1000 * 60 * 60, 
   });
 
-  // CORRECCIÓN: Crear un computed seguro para usar en el v-for
   const areas = computed<AreaSimple[]>(() => areasData.value || []);
 
   // --- QUERY 2: DASHBOARD STATS ---
@@ -36,16 +35,17 @@ export const useDashboardStore = defineStore("dashboard", () => {
 
   // Helper para devolver estructura vacía
   const safeStats = computed<DashboardStats>(() => stats.value || {
-    kpis: { total: 0, completadas: 0, pendientes: 0, enProceso: 0, tasaResolucion: 0, tiempoPromedio: 0, satisfaccion: 0 },
+    kpis: { total: 0, completadas: 0, rechazadas: 0, pendientes: 0, enProceso: 0, vencidas: 0, tasaResolucion: 0, tiempoPromedio: 0, satisfaccion: 0 },
     tendencia: [],
     estatus: [],
     prioridades: [],
     topSolicitantes: [],
+    topGestores: [], // ✅ Asegúrate que esto exista en tu tipo DashboardStats
     desempenoAreas: [],
     tiemposPorArea: []
   });
 
-  // --- COMPUTED: CHART.JS (Igual que antes) ---
+  // --- CHART 1: LINEA (Tendencia) ---
   const lineChartData = computed(() => {
     const data = safeStats.value.tendencia;
     return {
@@ -66,11 +66,28 @@ export const useDashboardStore = defineStore("dashboard", () => {
           borderColor: '#2dd4bf', 
           backgroundColor: 'rgba(45, 212, 191, 0.1)',
           tension: 0.4
-        }
+        },
+        {
+          label: 'Vencidas',
+          data: data.map(d => d.vencidas),
+          fill: true,
+          borderColor: '#f471b5', 
+          backgroundColor: 'rgba(244, 113, 181, 0.1)',
+          tension: 0.4
+        },
+          {
+          label: 'Rechazadas',
+          data: data.map(d => d.rechazadas),
+          fill: true,
+          borderColor: '#f87272', 
+          backgroundColor: 'rgba(248, 114, 114, 0.1)',
+          tension: 0.4
+        },
       ]
     };
   });
 
+  // --- CHART 2: DONA (Estatus) ---
   const pieChartData = computed(() => {
     const data = safeStats.value.estatus;
     const colorMap: Record<string, string> = {
@@ -78,7 +95,8 @@ export const useDashboardStore = defineStore("dashboard", () => {
       'En Proceso': '#3abff8', 
       'Resuelta': '#36d399',   
       'Cerrada': '#2a323c',    
-      'Rechazada': '#f87272'   
+      'Rechazada': '#f87272', 
+      'Vencida': '#f471b5'
     };
     return {
       labels: data.map(d => d.estado),
@@ -90,13 +108,16 @@ export const useDashboardStore = defineStore("dashboard", () => {
     };
   });
 
+  // --- CHART 3: BARRAS (Desempeño Áreas) ---
   const barChartData = computed(() => {
     const data = safeStats.value.desempenoAreas;
     return {
       labels: data.map(d => d.area),
       datasets: [
         { label: 'Total', backgroundColor: '#7480ff', data: data.map(d => d.total), borderRadius: 4 },
-        { label: 'Completadas', backgroundColor: '#36d399', data: data.map(d => d.completadas), borderRadius: 4 }
+        { label: 'Completadas', backgroundColor: '#36d399', data: data.map(d => d.completadas), borderRadius: 4 },
+        { label: 'Vencidas', backgroundColor: '#f471b5', data: data.map(d => d.vencidas), borderRadius: 4 },
+        { label: 'Rechazadas', backgroundColor: '#f87272', data: data.map(d => d.rechazadas), borderRadius: 4 }
       ]
     };
   });
@@ -140,6 +161,17 @@ export const useDashboardStore = defineStore("dashboard", () => {
     }));
   });
 
+  // ✅ CORRECCIÓN AQUÍ: Se lee 'topGestores' en lugar de 't'
+  const topGestores = computed(() => {
+    // Usamos una paleta diferente para diferenciar visualmente o la misma
+    const colors = ['bg-indigo-500 text-white', 'bg-purple-500 text-white', 'bg-pink-500 text-white', 'bg-rose-500 text-white', 'bg-orange-500 text-white'];
+    
+    return safeStats.value.topGestores.map((user, index) => ({
+      ...user,
+      color: colors[index % colors.length] 
+    }));
+  });
+
   // --- ACTIONS ---
   function refreshDashboard() {
     refetch();
@@ -153,18 +185,15 @@ export const useDashboardStore = defineStore("dashboard", () => {
     selectedArea, 
     isLoading,
     error,
-    
     stats: safeStats,
-    
-    // CORRECCIÓN AQUÍ: Exportamos 'areas' (el computed), no 'areasData'
     areas, 
-
     lineChartData,
     pieChartData,
     barChartData,
     hBarChartData,
     kpis,
     topSolicitantes,
+    topGestores, // 👈 No olvides exportarlo aquí
     prioridades,
     changePeriod,
     refreshDashboard

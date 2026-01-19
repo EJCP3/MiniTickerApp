@@ -57,6 +57,16 @@ async getActiveManagers(): Promise<User[]> {
   // Llamamos al endpoint que ya devuelve la lista filtrada desde el backend
   const response = await apiClient.get("/api/catalog/managers-selection");
   return response.data;
-}
+},
+
+async getPendingResets() {
+    const response = await apiClient.get('/api/users/reset-requests');
+    return response.data;
+  },
+
+  async adminResetPassword(userId: string) {
+    const response = await apiClient.post(`/api/users/${userId}/admin-reset`);
+    return response.data; // Aquí viene el mensaje con la contraseña temporal
+  }
 
 }

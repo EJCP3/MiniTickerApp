@@ -16,6 +16,7 @@ import { useAuthStore } from "@/stores/authStore";
 import InitialSetup from "@/pages/login/InitialSetup.vue"; 
 import { report } from "process";
 import Report from "@/pages/report/Report.vue";
+import ForgotPasswordView from "@/pages/login/ForgotPasswordView.vue";
 
 type Role = "Solicitante" | "Admin" | "Gestor" | "SuperAdmin";
 
@@ -29,17 +30,23 @@ declare module "vue-router" {
 
 const routes: RouteRecordRaw[] = [
   {
-    path: "/login/login",
+    path: "/login",
     component: Login,
     name: "Login",
     meta: { requiresGuest: true },
   },
   // 👇 Excelente decisión: Fuera del Layout para que no vea el menú
-  {
-    path: '/login/initial',
+  { 
+    path: '/initial',
     name: 'InitialSetup',
     component: InitialSetup,
     meta: { requiresAuth: true } 
+  },
+  {
+    path: "/forgot-password",
+    component: ForgotPasswordView,
+    name: "ForgotPassword",
+    meta: { requiresGuest: true },
   },
   {
     path: "/",
@@ -84,6 +91,13 @@ const routes: RouteRecordRaw[] = [
         name: "Usuarios",
         meta: { allowedRoles: ["SuperAdmin"] },
       },
+
+      {
+        path: "/usuarios/reset",
+        component: () => import('@/pages/usuarios/AdminResetRequests.vue'),
+        name: "AdminResetRequests",
+        meta: { allowedRoles: ["SuperAdmin"] },
+      }
        
     ],
   },

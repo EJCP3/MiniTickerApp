@@ -21,6 +21,7 @@ const ninjaKeysRef = ref<InstanceType<typeof MenuKeys> | null>(null);
 
 // --- 3. Funciones de apertura (Reciben eventos del Navbar) ---
 const handleOpenPerfil = () => {
+  console.log("Intentando abrir modal layout...");
   perfilModalRef.value?.openModal();
 };
 

@@ -13,9 +13,7 @@ const props = defineProps<{
 }>();
 
 
-const clickid = () => {
-  console.log("Ticket ID prop:", props.ticket);
-};
+console.log(props.ticket)
 
 
 const store = useTicketStore();
@@ -71,9 +69,23 @@ const getNombreArchivo = (url: string) => {
          </div>
       </div>
 
-      <div class="space-y-1">
-       <TicketAssignment :ticketId="props.ticketId"/>
-       
+     <div class="space-y-1">
+        <template v-if="store.currentTicket.estado === 'Vencida'">
+           <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider flex items-center gap-2 mb-1">
+              <BaseIcon name="user" class="h-4 w-4" /> Responsable
+           </h3>
+           <div class="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              <BaseIcon name="ban" class="h-5 w-5" />
+              <div class="flex flex-col">
+                 <span class="text-sm font-bold">Asignación Bloqueada</span>
+                 <span class="text-xs opacity-80">El ticket ha vencido.</span>
+              </div>
+           </div>
+        </template>
+
+        <template v-else>
+           <TicketAssignment :ticketId="props.ticketId"/>
+        </template>
       </div>
 
       <div class="space-y-1">
@@ -91,6 +103,16 @@ const getNombreArchivo = (url: string) => {
          </h3>
          <div class="text-sm font-semibold text-base-content">
             {{ store.formatBackendDate(store.currentTicket.fechaActualizacion) }}
+         </div>
+      </div>
+  
+
+      <div class="space-y-1">
+         <h3 class="text-xs font-bold text-base-content/50 uppercase tracking-wider flex items-center gap-2">
+            <BaseIcon name="calendar" class="h-4 w-4" /> Fecha de Vencimiento
+         </h3>
+         <div class="text-sm font-semibold text-base-content">
+             {{ props.ticket.fechaVencimiento ? store.formatBackendDate(store.currentTicket.fechaVencimiento) : 'No especificada' }}
          </div>
       </div>
 

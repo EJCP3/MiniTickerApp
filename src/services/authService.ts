@@ -46,5 +46,12 @@ export default {
     return response.data;
   },
 
+  async requestPasswordReset(email: string, code: string) {
+    // El nombre de la propiedad 'primeros4DigitosId' debe coincidir EXACTO con tu DTO de C#
+    return  apiClient.post('/api/auth/request-reset', { 
+      email: email, 
+      primeros4DigitosId: code 
+    });
+  }
 
 };

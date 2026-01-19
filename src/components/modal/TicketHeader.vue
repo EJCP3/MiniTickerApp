@@ -40,7 +40,7 @@ const canDownloadPdf = computed(() => {
 
 // 3. ¿Quién puede gestionar? (Mientras no esté cerrada)
 const puedeGestionar = computed(() => {
-  const estadosFinalizados = ["Cerrada", "Rechazada"];
+  const estadosFinalizados = ["Cerrada", "Rechazada", "Vencida"];
   return !estadosFinalizados.includes(props.ticket.estado);
 });
 

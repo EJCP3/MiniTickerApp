@@ -52,3 +52,7 @@ El proyecto integra un ecosistema de librerías modernas:
 - VueUse (Composables)
 - JWT Decode (Auth)
 - XLSX & jsPDF (Reportes)
+
+### Backend
+
+--- https://github.com/EJCP3/MiniTickerAPI

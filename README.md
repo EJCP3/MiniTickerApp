@@ -1,6 +1,6 @@
 # MiniTicker - Sistema de Solicitudes Internas
 
-Esta es la solución para el Sistema de Mesa de Servicios (MiniTicker). El proyecto consiste en una **Single Page Application (SPA)** moderna, diseñada para ser rápida y reactiva.
+Esta es la solución para el Sistema de Mesa de Servicios (MiniTicker). El proyecto consiste en una aplicación web de múltiples páginas (MPA), moderna, diseñada para ser rápida y reactiva.
 
 ### Funcionalidades
 
